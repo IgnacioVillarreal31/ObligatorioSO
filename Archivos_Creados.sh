@@ -20,7 +20,7 @@ archivos_hoy=$(mktemp)
 find $dir_usuario -type f -user $USER -newermt "$fecha_hoy" > $archivos_hoy
 
 #Comparamos los archivos generados hoy con los que fueron generados ayer y mostramos la diferencia
-diff -u $archivos_hoy $archivos_ayer
+diferencia=$(diff -u $archivos_hoy $archivos_ayer)
 
 #Eliminamos los archivos temporales
 rm $archivos_hoy $archivos_ayer 
