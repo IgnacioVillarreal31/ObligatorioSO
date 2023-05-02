@@ -1,18 +1,25 @@
 import java.util.List;
-public class Proceso implements Runnable{
+import java.util.PriorityQueue;
+public class Proceso implements Runnable, Comparable<Proceso>{
     public long tiempoEjecucion;
     public String id;
     public int prioridad;
     public List<IRecurso> recursosUsados;
     public Estados estado;
-    public Proceso(String id, long tiempoEjecucion,
-                   int prioridad, List<IRecurso> recursosUsados, Estados estado) {
+    public Proceso(String id, long tiempoEjecucion, int prioridad, List<IRecurso> recursosUsados, Estados estado) {
         this.id = id;
         this.tiempoEjecucion = tiempoEjecucion;
         this.prioridad = prioridad;
         this.recursosUsados = recursosUsados;
         this.estado = estado;
+    }
 
+    public Estados getEstado(){
+        return this.estado;
+    }
+
+    public void setEstado(Estados estado){
+        this.estado = estado;
     }
     public void run() {
         System.out.println("Ejecutando " + id + "...");
@@ -22,6 +29,10 @@ public class Proceso implements Runnable{
             e.printStackTrace();
         }
         System.out.println(id + " terminado.");
+    }
+
+    public int compareTo(Proceso otroProceso){
+        return Integer.compare(this.prioridad, otroProceso.prioridad);
     }
 
     public enum Estados{

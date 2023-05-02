@@ -100,8 +100,8 @@ public class Scheduller {
         }
     }
 
-    public void wait(Proceso proceso) {
-        semaforo.wait(proceso);
+    public void wait(Proceso proceso) throws InterruptedException {
+        semaforo.wait(proceso.tiempoEjecucion);
     }
 
     public void signal(Proceso proceso) {
