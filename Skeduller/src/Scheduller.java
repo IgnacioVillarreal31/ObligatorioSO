@@ -1,6 +1,4 @@
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 public class Scheduller {
@@ -8,14 +6,15 @@ public class Scheduller {
     private Queue<Proceso> colaLista;
     private Queue<Proceso> colaDeEspera;
     private Semaphore semaforo;
-    private List<IRecurso> recursos;
+    private List<IRecurso> recursosDisponibles;
 
     public Scheduller(List<IRecurso> recursos) {
+        PriorityQueue<Proceso> cola = new PriorityQueue<>(Comparator.reverseOrder());
         this.colaDeTrabajos = new LinkedList<>();
         this.colaLista = new LinkedList<>();
         this.colaDeEspera = new LinkedList<>();
-        this.semaforo = new Semaphore(10);
-        this.recursos = recursos;
+        this.semaforo = new Semaphore(1);
+        this.recursosDisponibles = recursos;
     }
 
     public void agregarProceso(Proceso proceso) {
@@ -46,29 +45,69 @@ public class Scheduller {
                 } catch (InterruptedException e) {
                     // Ignore interrupted exception
                 }
-            } else {
-                // Run the next task
-                proceso.run();
-                colaLista.poll();
-                if (proceso.estado == Proceso.Estados.Correr) {
-                    proceso.estado = Proceso.Estados.Listo;
-                    colaLista.offer(proceso);
-                } else if (proceso.estado == Proceso.Estados.Bloquear) {
-                    for (IRecurso recursos : proceso.recursos) {
-                        recursos.cambiarEstadoUsoando();
+            } else { // Run the next task
+                Boolean recursoDisponible = true; // Si el recurso esta disponible
+                for (IRecurso recur : proceso.recursosUsados){
+                    if (recur.getEstado() == true){
+                        recursoDisponible = false;
                     }
-                    semaforo.acquire();
-                } else if (proceso.estado == Proceso.Estados.Finalizar) {
-                    for (IRecurso recursos : proceso.recursos) {
-                        recursos.cambiarEstadoDisponible();
+                }
+                if (recursoDisponible == false){
+                    colaDeEspera.add(proceso);
+                }else{
+                    proceso.run();
+                    colaLista.poll();
+                    if (proceso.estado == Proceso.Estados.Correr) {
+                        proceso.estado = Proceso.Estados.Listo;
+                        colaLista.offer(proceso);
+                    } else if (proceso.estado == Proceso.Estados.Bloquear) {
+                        for (IRecurso recursos : proceso.recursosUsados) {
+                            recursos.cambiarEstadoUsando();
+                        }
+                        semaforo.acquire();
+                    } else if (proceso.estado == Proceso.Estados.Finalizar) {
+                        for (IRecurso recursos : proceso.recursosUsados) {
+                            recursos.cambiarEstadoDisponible();
+                        }
                     }
                 }
             }
         }
     }
 
-    // Métodos de gestión de recursos y semáforos
-    // ...
+    public void solicitarRecurso(Proceso proceso) {
+        boolean disponible = true;
+        for (IRecurso r: proceso.recursosUsados) {
+            if (r.getEstado() == true){
+                disponible = false;
+            }
+        }
+        if (disponible != false){
+            for (IRecurso r: proceso.recursosUsados) {
+                r.cambiarEstadoUsando();
+            }
+        }else{
+            proceso.estado = Proceso.Estados.Bloquear;
+        }
+    }
+
+    public void liberarRecurso(Proceso proceso) {
+        for (IRecurso r: proceso.recursosUsados) {
+            r.cambiarEstadoDisponible();
+        }
+        proceso.estado = Proceso.Estados.Finalizar;
+            colaLista.offer(proximoProceso);
+        }
+    }
+
+    public void wait(Proceso proceso) {
+        semaforo.wait(proceso);
+    }
+
+    public void signal(Proceso proceso) {
+        semaforo.signal(proceso);
+    }
+
 
 }
 

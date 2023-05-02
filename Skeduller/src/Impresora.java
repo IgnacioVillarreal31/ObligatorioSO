@@ -1,7 +1,15 @@
 public class Impresora implements IRecurso {
-    public Boolean siendoUtilizado = false;
+    public Boolean siendoUtilizado;
+
+    public Impresora() {
+        this.siendoUtilizado = false;
+    }
+
+    public Boolean getEstado(){
+        return siendoUtilizado;
+    }
     @Override
-    public void cambiarEstadoUsoando() {
+    public void cambiarEstadoUsando() {
         siendoUtilizado = true;
     }
     @Override
