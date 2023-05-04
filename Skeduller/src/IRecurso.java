@@ -1,5 +1,5 @@
 public interface IRecurso {
-    public Boolean getEstado();
+    public Boolean siendoUsado();
     public void cambiarEstadoUsando();
     public void cambiarEstadoDisponible();
 }

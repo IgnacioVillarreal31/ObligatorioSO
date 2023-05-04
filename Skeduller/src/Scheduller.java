@@ -2,87 +2,56 @@ import java.util.*;
 import java.util.concurrent.Semaphore;
 
 public class Scheduller {
-    private LinkedList<Proceso> listaNuevosProcesos;
-    private Queue<Proceso> colaLista;
+    private PriorityQueue<Proceso> colaLista;
     private LinkedList<Proceso> listaBloqueado;
     private LinkedList<Proceso> listaProcesosTerminados;
-    private Proceso procesoEnEjecucion;
     private Semaphore semaforo;
     private List<IRecurso> recursosDisponibles;
 
     public Scheduller(List<IRecurso> recursos) {
-        PriorityQueue<Proceso> cola = new PriorityQueue<>(Comparator.reverseOrder());
-        this.listaNuevosProcesos = new LinkedList<>();
-        this.listaProcesosTerminados = new LinkedList<>();
-        this.colaLista = new LinkedList<>();
+        this.colaLista = new PriorityQueue<>();
         this.listaBloqueado = new LinkedList<>();
+        this.listaProcesosTerminados = new LinkedList<>();
         this.semaforo = new Semaphore(1);
         this.recursosDisponibles = recursos;
     }
 
-    public void agregarProceso(Proceso proceso) {
-        listaNuevosProcesos.offer(proceso);
+    public void agregarProceso(Proceso proceso) throws InterruptedException {
+        if (proceso.estado == Proceso.Estados.Listo) {
+            colaLista.offer(proceso);
+        } else if (proceso.estado == Proceso.Estados.Bloqueado) {
+            listaBloqueado.offer(proceso);
+            semaforo.wait(proceso.tiempoEjecucion);
+        }
     }
 
     public void ejecutarProcesos() throws InterruptedException {
-        while (!listaNuevosProcesos.isEmpty()) {
-            Proceso proceso = listaNuevosProcesos.poll();
-            if (proceso.estado == Proceso.Estados.Nuevo) {
-                proceso.estado = Proceso.Estados.Listo;
-                colaLista.offer(proceso);
-            } else if (proceso.estado == Proceso.Estados.Bloqueado) {
-                listaBloqueado.offer(proceso);
-                semaforo.wait(proceso.tiempoEjecucion); //?
-            }
-        }
-        run();
-    }
-
-    public void run() throws InterruptedException {
         while (!colaLista.isEmpty()) {
             long currentTime = System.currentTimeMillis();
             Proceso proceso = colaLista.peek();
-            if (proceso.tiempoEjecucion > currentTime) {
-                // Sleep until it's time for the next task
-                try {
-                    Thread.sleep(proceso.tiempoEjecucion - currentTime); // duracion
-                } catch (InterruptedException e) {
-                    // Ignore interrupted exception
-                }
-            } else { // Run the next task
-                Boolean recursoDisponible = true; // Si el recurso esta disponible
-                for (IRecurso recur : proceso.recursosUsados){
-                    if (recur.getEstado() == true){
-                        recursoDisponible = false;
+            // Run the task
+            if (solicitarRecurso(proceso) == true) { // solicita recursos y verifica disponibilidad
+                if (proceso.tiempoEjecucion > currentTime) {
+                    // Sleep until it's time for the next task
+                    try {
+                        Thread.sleep(proceso.tiempoEjecucion - currentTime); // duracion
+                        proceso.run();
+                    } catch (InterruptedException e) {
+                        // Ignore interrupted exception
                     }
                 }
-                if (recursoDisponible == false){
-                    colaDeEspera.add(proceso);
-                }else{
-                    proceso.run();
-                    colaLista.poll();
-                    if (proceso.estado == Proceso.Estados.Ejecucion) {
-                        proceso.estado = Proceso.Estados.Listo;
-                        colaLista.offer(proceso);
-                    } else if (proceso.estado == Proceso.Estados.Bloqueado) {
-                        for (IRecurso recursos : proceso.recursosUsados) {
-                            recursos.cambiarEstadoUsando();
-                        }
-                        semaforo.acquire();
-                    } else if (proceso.estado == Proceso.Estados.Terminado) {
-                        for (IRecurso recursos : proceso.recursosUsados) {
-                            recursos.cambiarEstadoDisponible();
-                        }
-                    }
-                }
+                liberarRecurso(proceso);
+            } else { // checkeo los bloqueados, para ver si van denuevos a la cola lista
+
             }
         }
     }
 
-    public void solicitarRecurso(Proceso proceso) {
+
+    public boolean solicitarRecurso(Proceso proceso) {
         boolean disponible = true;
         for (IRecurso r: proceso.recursosUsados) {
-            if (r.getEstado() == true){
+            if (r.siendoUsado() == true){
                 disponible = false;
             }
         }
@@ -91,8 +60,11 @@ public class Scheduller {
                 r.cambiarEstadoUsando();
             }
         }else{
+            colaLista.poll();
             proceso.estado = Proceso.Estados.Bloqueado;
+            listaBloqueado.add(proceso);
         }
+        return disponible;
     }
 
     public void liberarRecurso(Proceso proceso) {
@@ -100,17 +72,8 @@ public class Scheduller {
             r.cambiarEstadoDisponible();
         }
         proceso.estado = Proceso.Estados.Terminado;
-        colaLista.remove(proceso);
+        colaLista.poll();
+        listaProcesosTerminados.add(proceso);
     }
-
-    public void wait(Proceso proceso) throws InterruptedException {
-        semaforo.wait(proceso.tiempoEjecucion);
-    }
-
-    public void signal(Proceso proceso) {
-        semaforo.signal(proceso);
-    }
-
-
 }
 
