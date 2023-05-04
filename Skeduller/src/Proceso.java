@@ -38,11 +38,9 @@ public class Proceso implements Runnable, Comparable<Proceso>{
     public enum Estados{
         Nuevo,
         Listo,
-        Correr,
-        Bloquear,
-        Finalizar,
-        ListoParaSuspender,
-        SuspenderEspera
+        Ejecucion,
+        Bloqueado,
+        Terminado
     }
 }
 
