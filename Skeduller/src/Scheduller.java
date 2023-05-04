@@ -29,29 +29,49 @@ public class Scheduller {
         while (!colaLista.isEmpty()) {
             long currentTime = System.currentTimeMillis();
             Proceso proceso = colaLista.peek();
+            long tiempoRestante = proceso.tiempoEjecucion - currentTime;
             // Run the task
-            if (solicitarRecurso(proceso) == true) { // solicita recursos y verifica disponibilidad
-                if (proceso.tiempoEjecucion > currentTime) {
-                    // Sleep until it's time for the next task
-                    try {
-                        Thread.sleep(proceso.tiempoEjecucion - currentTime); // duracion
-                        proceso.run();
-                    } catch (InterruptedException e) {
-                        // Ignore interrupted exception
+            if (tiempoRestante <= 0) { //Si el tiempo restante es negativo el proceso debe ejecutarse de inmediato
+                proceso.run();
+                liberarRecurso(proceso);
+                colaLista.poll();
+                continue; //sigue con el siguiente elemento a iterar
+            }
+
+            if (solicitarRecurso(proceso)) { // solicita recursos y verifica disponibilidad
+                try {
+                    Thread.sleep(tiempoRestante); //el hilo actual se detiene por unos milisegundos
+                } catch (InterruptedException e){
+                    continue;
+                }
+                proceso.run();
+                liberarRecurso(proceso);
+                colaLista.poll();
+            } else { // checkeo los bloqueados, para ver si van denuevo a la cola lista
+                List<Proceso> procesosParaEliminar = new ArrayList<>();
+                for (Proceso p: listaBloqueado) {
+                    boolean disponible = true;
+                    for (IRecurso recursos : p.recursosUsados){
+                        if(recursos.siendoUsado()) {
+                            disponible = false;
+                            break;
+                        }
+                    }
+                    if (disponible) {
+                        p.estado = Proceso.Estados.Listo;
+                        colaLista.add(p);
+                        procesosParaEliminar.add(p);
                     }
                 }
-                liberarRecurso(proceso);
-            } else { // checkeo los bloqueados, para ver si van denuevos a la cola lista
-
+                listaBloqueado.removeAll(procesosParaEliminar);
             }
         }
     }
 
-
     public boolean solicitarRecurso(Proceso proceso) {
         boolean disponible = true;
         for (IRecurso r: proceso.recursosUsados) {
-            if (r.siendoUsado() == true){
+            if (r.siendoUsado()){
                 disponible = false;
             }
         }
@@ -76,4 +96,5 @@ public class Scheduller {
         listaProcesosTerminados.add(proceso);
     }
 }
+
 
