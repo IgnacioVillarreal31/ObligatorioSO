@@ -31,6 +31,17 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         System.out.println(id + " terminado.");
     }
 
+    public void runMax() {
+        System.out.println("Ejecutando " + id + "...");
+        try {
+            long currentTime = System.currentTimeMillis();
+            Thread.sleep(currentTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(id + " terminado.");
+    }
+
     public int compareTo(Proceso otroProceso){
         return Integer.compare(this.prioridad, otroProceso.prioridad);
     }

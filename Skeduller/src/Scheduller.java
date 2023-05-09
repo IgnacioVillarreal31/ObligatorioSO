@@ -39,7 +39,7 @@ public class Scheduller {
                 semaforo.release(); // liberamos el semáforo para permitir que otro proceso lo adquiera
             }else if (tiempoRestante > 0 && solicitarRecurso(proceso) == true){
                 semaforo.acquire(); // adquirimos el semáforo antes de ejecutar el proceso
-                proceso.run();
+                proceso.runMax();
                 for (IRecurso r: proceso.recursosUsados) {
                     r.cambiarEstadoDisponible();
                 }
