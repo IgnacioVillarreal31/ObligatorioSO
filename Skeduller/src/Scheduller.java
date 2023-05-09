@@ -8,6 +8,7 @@ public class Scheduller {
     private Semaphore semaforo;
     private List<IRecurso> recursosDisponibles;
 
+
     public Scheduller(List<IRecurso> recursos) {
         this.colaLista = new PriorityQueue<>();
         this.listaBloqueado = new LinkedList<>();
@@ -31,40 +32,41 @@ public class Scheduller {
             Proceso proceso = colaLista.peek();
             long tiempoRestante = proceso.tiempoEjecucion - currentTime;
             // Run the task
-            if (tiempoRestante <= 0) { //Si el tiempo restante es negativo el proceso debe ejecutarse de inmediato
+            if (tiempoRestante <= 0 && solicitarRecurso(proceso) == true) { //Si el tiempo restante es negativo el proceso debe ejecutarse de inmediato
+                semaforo.acquire(); // adquirimos el semáforo antes de ejecutar el proceso
                 proceso.run();
                 liberarRecurso(proceso);
+                semaforo.release(); // liberamos el semáforo para permitir que otro proceso lo adquiera
+            }else if (tiempoRestante > 0 && solicitarRecurso(proceso) == true){
+                semaforo.acquire(); // adquirimos el semáforo antes de ejecutar el proceso
+                proceso.run();
+                for (IRecurso r: proceso.recursosUsados) {
+                    r.cambiarEstadoDisponible();
+                }
                 colaLista.poll();
-                continue; //sigue con el siguiente elemento a iterar
-            }
+                proceso.tiempoEjecucion -= currentTime;
+                colaLista.offer(proceso);
+                semaforo.release(); // liberamos el semáforo para permitir que otro proceso lo adquiera
+            }else{ // poner en lista de bloqueados
 
-            if (solicitarRecurso(proceso)) { // solicita recursos y verifica disponibilidad
-                try {
-                    Thread.sleep(tiempoRestante); //el hilo actual se detiene por unos milisegundos
-                } catch (InterruptedException e){
-                    continue;
-                }
-                proceso.run();
-                liberarRecurso(proceso);
-                colaLista.poll();
-            } else { // checkeo los bloqueados, para ver si van denuevo a la cola lista
-                List<Proceso> procesosParaEliminar = new ArrayList<>();
-                for (Proceso p: listaBloqueado) {
-                    boolean disponible = true;
-                    for (IRecurso recursos : p.recursosUsados){
-                        if(recursos.siendoUsado()) {
-                            disponible = false;
-                            break;
-                        }
-                    }
-                    if (disponible) {
-                        p.estado = Proceso.Estados.Listo;
-                        colaLista.add(p);
-                        procesosParaEliminar.add(p);
-                    }
-                }
-                listaBloqueado.removeAll(procesosParaEliminar);
             }
+            // checkeo los bloqueados, para ver si van denuevo a la cola lista
+            List<Proceso> procesosParaEliminar = new ArrayList<>();
+            for (Proceso p: listaBloqueado) {
+                boolean disponible = true;
+                for (IRecurso recursos : p.recursosUsados){
+                    if(recursos.siendoUsado()) {
+                        disponible = false;
+                        break;
+                    }
+                }
+                if (disponible) {
+                    p.estado = Proceso.Estados.Listo;
+                    colaLista.add(p);
+                    procesosParaEliminar.add(p);
+                }
+            }
+            listaBloqueado.removeAll(procesosParaEliminar);
         }
     }
 
