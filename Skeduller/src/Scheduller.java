@@ -52,8 +52,6 @@ public class Scheduller {
                 proceso.tiempoEjecucion -= currentTime;
                 colaLista.offer(proceso);
                 semaforo.release(); // liberamos el semáforo para permitir que otro proceso lo adquiera
-            }else{ // poner en lista de bloqueados
-
             }
             // checkeo los bloqueados, para ver si van denuevo a la cola lista
             List<Proceso> procesosParaEliminar = new ArrayList<>();
@@ -61,6 +59,12 @@ public class Scheduller {
                 salidaBolqueado(p,procesosParaEliminar);
             }
             listaBloqueado.removeAll(procesosParaEliminar);
+
+            List<Proceso> procesosParaSuspender = new ArrayList<>();
+            for (Proceso p: listaSuspendidoListo) {
+                salidaSuspendidoListo(p,procesosParaSuspender);
+            }
+            listaSuspendidoListo.removeAll(procesosParaSuspender);
         }
     }
 
@@ -77,15 +81,29 @@ public class Scheduller {
             }
         }
         if (ruptura && disponible == false){
-            listaBloqueado.remove(proceso);
             proceso.estado = Proceso.Estados.SuspendidoBloqueado;
             listaSuspendidoBloqueado.add(proceso);
+            procesosParaEliminar.add(proceso);
             return;
         }
         if (disponible && ruptura == false) {
             proceso.estado = Proceso.Estados.Listo;
             colaLista.add(proceso);
             procesosParaEliminar.add(proceso);
+        }
+    }
+
+    public void salidaSuspendidoListo(Proceso proceso, List<Proceso> procesosParaSuspender){
+        Boolean ruptura = true;
+        for (IRecurso recursos : proceso.recursosUsados){
+            if (recursos.getEstaRoto() == false){
+                ruptura = false;
+            }
+        }
+        if (ruptura == false){
+            listaSuspendidoListo.remove(proceso);
+            proceso.estado = Proceso.Estados.Listo;
+            colaLista.offer(proceso);
         }
     }
 
