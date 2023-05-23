@@ -4,7 +4,8 @@ import java.util.concurrent.Semaphore;
 public class Scheduller {
     private PriorityQueue<Proceso> colaLista;
     private LinkedList<Proceso> listaBloqueado;
-    private LinkedList<Proceso> listaSuspendido;
+    private LinkedList<Proceso> listaSuspendidoListo;
+    private LinkedList<Proceso> listaSuspendidoBloqueado;
 
     private LinkedList<Proceso> listaProcesosTerminados;
     private Semaphore semaforo;
@@ -14,7 +15,8 @@ public class Scheduller {
     public Scheduller(List<IRecurso> recursos) {
         this.colaLista = new PriorityQueue<>();
         this.listaBloqueado = new LinkedList<>();
-        this.listaSuspendido = new LinkedList<>();
+        this.listaSuspendidoListo = new LinkedList<>();
+        this.listaSuspendidoBloqueado = new LinkedList<>();
         this.listaProcesosTerminados = new LinkedList<>();
         this.semaforo = new Semaphore(1);
         this.recursosDisponibles = recursos;
@@ -56,20 +58,34 @@ public class Scheduller {
             // checkeo los bloqueados, para ver si van denuevo a la cola lista
             List<Proceso> procesosParaEliminar = new ArrayList<>();
             for (Proceso p: listaBloqueado) {
-                boolean disponible = true;
-                for (IRecurso recursos : p.recursosUsados){
-                    if(recursos.siendoUsado()) {
-                        disponible = false;
-                        break;
-                    }
-                }
-                if (disponible) {
-                    p.estado = Proceso.Estados.Listo;
-                    colaLista.add(p);
-                    procesosParaEliminar.add(p);
-                }
+                salidaBolqueado(p,procesosParaEliminar);
             }
             listaBloqueado.removeAll(procesosParaEliminar);
+        }
+    }
+
+    public void salidaBolqueado(Proceso proceso, List<Proceso> procesosParaEliminar){
+        boolean disponible = true;
+        boolean ruptura = false;
+        for (IRecurso recursos : proceso.recursosUsados){
+            if (recursos.getEstaRoto()){
+                ruptura = true;
+            }
+            if(recursos.siendoUsado()) {
+                disponible = false;
+                break;
+            }
+        }
+        if (ruptura && disponible == false){
+            listaBloqueado.remove(proceso);
+            proceso.estado = Proceso.Estados.SuspendidoBloqueado;
+            listaSuspendidoBloqueado.add(proceso);
+            return;
+        }
+        if (disponible && ruptura == false) {
+            proceso.estado = Proceso.Estados.Listo;
+            colaLista.add(proceso);
+            procesosParaEliminar.add(proceso);
         }
     }
 
@@ -86,8 +102,8 @@ public class Scheduller {
         }
         if (ruptura == true) {
             colaLista.poll();
-            listaSuspendido.add(proceso);
-            proceso.estado = Proceso.Estados.Suspendido;
+            listaSuspendidoListo.add(proceso);
+            proceso.estado = Proceso.Estados.SuspendidoListo;
             return !ruptura;
         }else if (disponible != false){
             for (IRecurso r: proceso.recursosUsados) {

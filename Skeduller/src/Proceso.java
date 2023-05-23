@@ -51,7 +51,8 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         Ejecucion,
         Bloqueado,
         Terminado,
-        Suspendido
+        SuspendidoListo,
+        SuspendidoBloqueado
     }
 }
 
