@@ -4,6 +4,8 @@ import java.util.concurrent.Semaphore;
 public class Scheduller {
     private PriorityQueue<Proceso> colaLista;
     private LinkedList<Proceso> listaBloqueado;
+    private LinkedList<Proceso> listaSuspendido;
+
     private LinkedList<Proceso> listaProcesosTerminados;
     private Semaphore semaforo;
     private List<IRecurso> recursosDisponibles;
@@ -12,6 +14,7 @@ public class Scheduller {
     public Scheduller(List<IRecurso> recursos) {
         this.colaLista = new PriorityQueue<>();
         this.listaBloqueado = new LinkedList<>();
+        this.listaSuspendido = new LinkedList<>();
         this.listaProcesosTerminados = new LinkedList<>();
         this.semaforo = new Semaphore(1);
         this.recursosDisponibles = recursos;
@@ -72,19 +75,28 @@ public class Scheduller {
 
     public boolean solicitarRecurso(Proceso proceso) {
         boolean disponible = true;
+        boolean ruptura = false;
         for (IRecurso r: proceso.recursosUsados) {
             if (r.siendoUsado()){
                 disponible = false;
             }
+            if (r.getEstaRoto()){
+                ruptura = true;
+            }
         }
-        if (disponible != false){
+        if (ruptura == true) {
+            colaLista.poll();
+            listaSuspendido.add(proceso);
+            proceso.estado = Proceso.Estados.Suspendido;
+            return !ruptura;
+        }else if (disponible != false){
             for (IRecurso r: proceso.recursosUsados) {
                 r.cambiarEstadoUsando();
             }
         }else{
             colaLista.poll();
-            proceso.estado = Proceso.Estados.Bloqueado;
             listaBloqueado.add(proceso);
+            proceso.estado = Proceso.Estados.Bloqueado;
         }
         return disponible;
     }
