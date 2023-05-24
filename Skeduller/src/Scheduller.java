@@ -144,7 +144,6 @@ public class Scheduller {
         for (IRecurso r: proceso.recursosUsados) {
             r.cambiarEstadoDisponible();
         }
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " se termino...");
         proceso.estado = Proceso.Estados.Terminado;
         colaLista.poll();
         listaProcesosTerminados.add(proceso);

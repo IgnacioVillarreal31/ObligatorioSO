@@ -29,7 +29,7 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", id + " terminado.");
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + id + " se termino...");
         System.out.println(id + " terminado.");
     }
 
@@ -42,7 +42,7 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", id + " terminado.");
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + id + " se termino...");
         System.out.println(id + " terminado.");
     }
 
@@ -59,11 +59,3 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         SuspendidoBloqueado
     }
 }
-
-
-
-
-
-
-
-
