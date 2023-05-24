@@ -22,16 +22,19 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         this.estado = estado;
     }
     public void run() {
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "Ejecutando " + id + "...");
         System.out.println("Ejecutando " + id + "...");
         try {
             Thread.sleep(tiempoEjecucion);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", id + " terminado.");
         System.out.println(id + " terminado.");
     }
 
     public void runMax() {
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "Ejecutando " + id + "...");
         System.out.println("Ejecutando " + id + "...");
         try {
             long currentTime = System.currentTimeMillis();
@@ -39,6 +42,7 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", id + " terminado.");
         System.out.println(id + " terminado.");
     }
 

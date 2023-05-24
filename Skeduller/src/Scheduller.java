@@ -81,12 +81,14 @@ public class Scheduller {
             }
         }
         if (ruptura && disponible == false){
+            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " fue suspendido...");
             proceso.estado = Proceso.Estados.SuspendidoBloqueado;
             listaSuspendidoBloqueado.add(proceso);
             procesosParaEliminar.add(proceso);
             return;
         }
         if (disponible && ruptura == false) {
+            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " pasa de bloqueado a listo...");
             proceso.estado = Proceso.Estados.Listo;
             colaLista.add(proceso);
             procesosParaEliminar.add(proceso);
@@ -101,6 +103,7 @@ public class Scheduller {
             }
         }
         if (ruptura == false){
+            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " sale del estado suspendido y vuelve al estado listo...");
             listaSuspendidoListo.remove(proceso);
             proceso.estado = Proceso.Estados.Listo;
             colaLista.offer(proceso);
@@ -119,6 +122,7 @@ public class Scheduller {
             }
         }
         if (ruptura == true) {
+            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " fue suspendido...");
             colaLista.poll();
             listaSuspendidoListo.add(proceso);
             proceso.estado = Proceso.Estados.SuspendidoListo;
@@ -128,6 +132,7 @@ public class Scheduller {
                 r.cambiarEstadoUsando();
             }
         }else{
+            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + "fue bloqueado...");
             colaLista.poll();
             listaBloqueado.add(proceso);
             proceso.estado = Proceso.Estados.Bloqueado;
@@ -139,6 +144,7 @@ public class Scheduller {
         for (IRecurso r: proceso.recursosUsados) {
             r.cambiarEstadoDisponible();
         }
+        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " se termino...");
         proceso.estado = Proceso.Estados.Terminado;
         colaLista.poll();
         listaProcesosTerminados.add(proceso);
