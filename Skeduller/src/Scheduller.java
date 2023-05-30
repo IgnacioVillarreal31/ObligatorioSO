@@ -26,8 +26,8 @@ public class Scheduller {
         if (proceso.estado == Proceso.Estados.Listo) {
             colaLista.offer(proceso);
         } else if (proceso.estado == Proceso.Estados.Bloqueado) {
+            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " fue bloqueado...");
             listaBloqueado.offer(proceso);
-            semaforo.wait(proceso.tiempoEjecucion);
         }
     }
 

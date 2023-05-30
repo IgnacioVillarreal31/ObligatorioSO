@@ -21,12 +21,14 @@ public class Main {
         Proceso p2 = new Proceso("1112",3000,3,recursosDisponibles, Proceso.Estados.Listo);
         Proceso p3 = new Proceso("1113",3320,1, recursosSuspendido, Proceso.Estados.Listo);
         Proceso p4 = new Proceso("1114",3320,1, recursosSuspendido, Proceso.Estados.Listo);
+        Proceso p5 = new Proceso("1115",3320,1, recursosSuspendido, Proceso.Estados.Bloqueado);
 
         //Se inicializan los procesos, el p3 no se debería correr debido a que el recurso que necesita está roto
         Scheduller scheduller = new Scheduller(recursosDisponibles);
         scheduller.agregarProceso(p1);
         scheduller.agregarProceso(p3);
         scheduller.agregarProceso(p2);
+        scheduller.agregarProceso(p5);
         scheduller.ejecutarProcesos();
 
         //El recurso necesario para ejecutar p3 se arreglo, por lo que p3 se debería ejecutar luego de p4, que también debería ejecutarse ya que se arregló su recurso
