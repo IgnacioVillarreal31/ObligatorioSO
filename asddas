@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Obtener la fecha de ayer y la semana actual
+ayer=$(date +%Y-%m-%d -d "yesterday")
+semana=$(date -d "$ayer" +%W)
+
+# Crear directorios si no existen
+mkdir -p "$semana" "$semana/$(date +%Y-%m-%d)"
+
+# Obtener la lista de usuarios válidos
+usuariosValidos=$(bash usuariosValidos.sh)
+
+# Función para registrar las diferencias
+registrar_diferencias() {
+  local usuario=$1
+  local archivo1=$2
+  local archivo2=$3
+
+  if [ -s "$archivo2" ]; then
+    diff -u -b --ignore-all-space --ignore-space-change "$archivo1" "$archivo2" | grep -v "+++\|---\|@@\|No newline at end of file" >> "$log"
+    cat "$archivo2" > "$semana/$(date +%Y-%m-%d)/$usuario.txt"
+  else
+    sed -e 's/^/ /' "$archivo1" > "$semana/$(date +%Y-%m-%d)/$usuario.txt"
+  fi
+}
+
+# Procesar cada usuario
+for user in $usuariosValidos; do
+  usuario=$(echo "$user" | cut -d: -f1)
+  directorio=$(echo "$user" | cut -d: -f3)
+  archivo1="$semana/$ayer/$usuario.txt"
+  archivo2=$(mktemp)
+  archivo3=$(mktemp)
+  log="registro_diario.txt"
+
+  # Obtener lista de archivos en el directorio del usuario
+  find "$directorio" > "$archivo2"
+
+  if [ -f "$archivo1" ]; then
+    echo "ARCHIVO ANTES:"
+    cat "$archivo1"
+    grep -v '^-' "$archivo1" > "$archivo2"
+    echo "ARCHIVO DESPUES:"
+    sed -e 's/\s\+//g' "$archivo2" > "$archivo2"
+    cat "$archivo2"
+    bash diferenciaArchivos.sh "$archivo2" "$archivo3"
+
+    registrar_diferencias "$usuario" "$archivo2" "$archivo3"
+  else
+    sed -e 's/^/+/' "$archivo2" > "$semana/$(date +%Y-%m-%d)/$usuario.txt"
+  fi
+
+  echo "$directorio"
+  echo "archivo 1"
+  cat "$archivo1"
+  echo "archivo 2"
+  cat "$archivo2"
+  echo "archivo 3"
+  cat "$archivo3"
+done
