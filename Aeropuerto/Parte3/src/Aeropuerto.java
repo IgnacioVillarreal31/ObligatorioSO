@@ -9,7 +9,7 @@ public class Aeropuerto implements Runnable {
     protected Pista pistaActiva;
     protected final Semaphore permisoUsarPista = new Semaphore(15);
 
-    protected PriorityBlockingQueue<Avion> aterrizar;
+    public PriorityBlockingQueue<Avion> aterrizar;
     protected ArrayList<Avion> aviones;
 
     public Aeropuerto() {
@@ -50,9 +50,23 @@ public class Aeropuerto implements Runnable {
         // inicializar todos los aviones
         for (Avion avion : aviones) {
             Thread t1 = new Thread(avion);
+            t1.setPriority(Thread.NORM_PRIORITY);
             t1.start();
         }
 
+        //parte grafica
+        Graficos graficos = new Graficos(this);
+        Thread g = new Thread(graficos);
+        g.setPriority(Thread.NORM_PRIORITY);
+        g.start();
+
+
+        Thread recorrer = new Thread(new Recorrer(this));
+        recorrer.setPriority(Thread.NORM_PRIORITY);
+        recorrer.start();
+
+
+/*
         while (true) {
             //crear thread recorrer pbq y crear otro thread para actualizar los graficos
             while (!aterrizar.isEmpty()) {
@@ -63,7 +77,7 @@ public class Aeropuerto implements Runnable {
                     throw new RuntimeException(e);
                 }
             }
-        }
+        }*/
 
     }
 
