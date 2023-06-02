@@ -1,12 +1,13 @@
+import java.awt.*;
 import java.security.Timestamp;
 
-public class Avion implements Comparable<Avion>, Runnable{
+public class Avion implements Comparable<Avion>, Runnable {
 
+    final int SQUARE_SIZE = 25;
     protected boolean tienePrioridad = false;
     private boolean tienePermisoUsarPista = false;
     protected int prioridad;
     protected String nombre;
-
     protected Estados estado;
     protected int nivelCombustible;
     //dos semaforos, uno para pedir permiso para aterizar y otro para usar la pista,
@@ -15,13 +16,44 @@ public class Avion implements Comparable<Avion>, Runnable{
 
     protected long timestamp;
 
-    public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado) {
+    //para los graficos
+    private int x;
+    private int y;
+    private int dx = 1;
+    private int dy = 1;
+    private int targetX;
+    private int targetY;
+    private boolean moving;
+
+    private Posicion[] posiciones = new Posicion[10];
+
+    private int posicion = 0;
+
+    public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado, int x, int y) {
         this.aeropuerto = aeropuerto;
         this.nivelCombustible = nivelCombustible;
         this.nombre = nombre;
         this.prioridad = prioridad;
         this.timestamp = System.nanoTime();
         this.estado = estado;
+
+
+        this.x = x;
+        this.y = y;
+        this.targetX = x;
+        this.targetY = y;
+        this.moving = false;
+        posiciones[0] = new Posicion(597, 153);
+        posiciones[1] = new Posicion(601, 494);
+        posiciones[2] = new Posicion(600, 550);
+        posiciones[3] = new Posicion(457, 591);
+        posiciones[4] = new Posicion(349, 582);
+        posiciones[5] = new Posicion(247, 304);
+        posiciones[6] = new Posicion(252, 167);
+        posiciones[7] = new Posicion(305, 88);
+        posiciones[8] = new Posicion(430, 56);
+        posiciones[9] = new Posicion(529, 54);
+
 
     }
 
@@ -64,9 +96,8 @@ public class Avion implements Comparable<Avion>, Runnable{
         //taxear a donde tenga que ir
     }
 
-    public void pedirPrioridad(int prioridad) {
+    public void cambiarPrioridad(int prioridad) {
         //cambiar prioridad
-        this.tienePrioridad = true;
         Avion avion = this;
         aeropuerto.aterrizar.remove(this);
         avion.timestamp = System.nanoTime();
@@ -146,6 +177,47 @@ public class Avion implements Comparable<Avion>, Runnable{
             System.out.println(e);
         }
     }
+
+    public void move() {
+        if (moving) {
+            if (x < targetX) {
+                x += 1;
+            } else if (x > targetX) {
+                x -= 1;
+            }
+            if (y < targetY) {
+                y += 1;
+            } else if (y > targetY) {
+                y -= 1;
+            }
+            if (x == targetX && y == targetY) {
+                moving = false;
+            }
+        }
+    }
+
+    public void moveTo(int targetX, int targetY) {
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.moving = true;
+    }
+
+    public boolean contains(int px, int py) {
+        return px >= x && px <= x + SQUARE_SIZE && py >= y && py <= y + SQUARE_SIZE;
+    }
+
+    public void draw(Graphics g) {
+        g.setColor(Color.RED);
+        g.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+    }
+
+    public void nextPosition() {
+        if (!moving) {
+            moveTo(posiciones[posicion].x, posiciones[posicion].y);
+            posicion = (posicion + 1) % 10;
+        }
+    }
+
 
     public enum Estados {
         Volando, Aterrizando, Despegando, Estacionando, Estacionado, EnPiso
