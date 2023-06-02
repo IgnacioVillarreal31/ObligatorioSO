@@ -96,9 +96,8 @@ public class Avion implements Comparable<Avion>, Runnable {
         //taxear a donde tenga que ir
     }
 
-    public void pedirPrioridad(int prioridad) {
+    public void cambiarPrioridad(int prioridad) {
         //cambiar prioridad
-        this.tienePrioridad = true;
         Avion avion = this;
         aeropuerto.aterrizar.remove(this);
         avion.timestamp = System.nanoTime();
