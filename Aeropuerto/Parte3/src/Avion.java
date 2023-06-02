@@ -1,6 +1,6 @@
 import java.security.Timestamp;
 
-public class Avion implements Comparable<Avion> {
+public class Avion implements Comparable<Avion>, Runnable{
 
     protected boolean tienePrioridad = false;
     private boolean tienePermisoUsarPista = false;
@@ -39,14 +39,13 @@ public class Avion implements Comparable<Avion> {
 
     public void aterrizar() throws InterruptedException {
         //pedir permiso para usar la pista, si no tiene prioridad, y despues usar la pista
-        /*
+
         if (this.prioridad != 0) {
             aeropuerto.permisoUsarPista.acquire();
             System.out.println(this.nombre + " pidio permiso para aterrizar");
             Thread.sleep(1000);
             this.tienePermisoUsarPista = true;
         }
-        */
 
         aeropuerto.pistaActiva.usar.acquire();
         System.out.println(this.nombre + " va a usar la pista para aterrizar");
@@ -56,22 +55,23 @@ public class Avion implements Comparable<Avion> {
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista");
         this.estado = Estados.Aterrizando;
         Thread.sleep(1000);
-        /*
+
         if (this.tienePermisoUsarPista) {
             aeropuerto.permisoUsarPista.release();
             System.out.println(this.nombre + " devolvio el permiso para aterrizar");
             Thread.sleep(1000);
-        }*/
+        }
         //taxear a donde tenga que ir
     }
 
-    public void pedirPrioridad() {
+    public void pedirPrioridad(int prioridad) {
+        //cambiar prioridad
         this.tienePrioridad = true;
         Avion avion = this;
-        aeropuerto.cola.remove(this);
+        aeropuerto.aterrizar.remove(this);
         avion.timestamp = System.nanoTime();
-        avion.prioridad = 0;
-        aeropuerto.cola.offer(avion);
+        avion.prioridad = prioridad;
+        aeropuerto.aterrizar.offer(avion);
     }
 
     @Override
@@ -102,6 +102,49 @@ public class Avion implements Comparable<Avion> {
     public void estacionar() {
         //ver de ir a un porton aleatorio y como cruzar la pista, entre otros.
         this.estado = Estados.Estacionado;
+    }
+
+    @Override
+    public void run() {
+        //cambiar de estados viendo si ya esta donde debe estar o no.
+
+        try {
+            //System.out.println("Prioridad " + avion.nombre + " :" + avion.prioridad);
+
+            switch (this.estado) {
+                case Volando:
+                    //aterrizar el avion y cambiar estado a aterrizando
+                    //this.aterrizar();
+                    aeropuerto.pedirPermisoAterrizar(this);
+
+                    break;
+                case Aterrizando:
+                    //taxear a porton y cambiar estado a estacionando
+                    this.taxear(0, 0);
+                    this.estado = Avion.Estados.Estacionando;
+                    break;
+                case Despegando:
+                    //despegar el avion y cambiar el estado a volando?
+                    this.despegar();
+                    break;
+                case Estacionando:
+                    //estacionar y cambiar el estado a estacionado
+                    this.estacionar();
+                    break;
+                case Estacionado:
+                    //dejar de actualizar avion y quizas borrarlo de la lista de aviones? o ponerle el estado EnPiso
+
+                    break;
+                case EnPiso:
+                    //taxear a cabecera de pista, y cambiar estado a despegando
+                    this.taxear(0, 0);
+                    this.estado = Avion.Estados.Despegando;
+                    break;
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     public enum Estados {

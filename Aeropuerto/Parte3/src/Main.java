@@ -11,6 +11,7 @@ public class Main {
         Avion a3 = new Avion(aero, 1, "A3", 10, Avion.Estados.Volando);
         Avion a4 = new Avion(aero, 1, "A4", 10, Avion.Estados.Volando);
         Avion a5 = new Avion(aero, 1, "A5", 10, Avion.Estados.Volando);
+        /*
         aero.cola.offer(a1);
         aero.cola.offer(a2);
         aero.cola.offer(a3);
@@ -32,6 +33,8 @@ public class Main {
             System.out.println(avion.nombre + " ");
         }
 */
+
+
         aero.run();
 
     }
