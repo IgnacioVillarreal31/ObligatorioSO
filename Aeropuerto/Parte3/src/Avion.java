@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.awt.*;
 import java.security.Timestamp;
 
@@ -25,11 +26,19 @@ public class Avion implements Comparable<Avion>, Runnable {
     private int targetY;
     private boolean moving;
 
-    private Posicion[] posiciones = new Posicion[10];
-
     private int posicion = 0;
 
-    public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado, int x, int y) {
+    private final int OFFSET_X = 20;
+
+    private final int OFFSET_Y = 20;
+
+    public Panel panel;
+
+    public Posiciones posiciones;
+
+    public Posicion siguientePosicion;
+
+    public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado, int x, int y, ImageIcon icono) {
         this.aeropuerto = aeropuerto;
         this.nivelCombustible = nivelCombustible;
         this.nombre = nombre;
@@ -37,23 +46,15 @@ public class Avion implements Comparable<Avion>, Runnable {
         this.timestamp = System.nanoTime();
         this.estado = estado;
 
+        this.panel = new Panel(nombre, estado.toString(), icono);
+
+        this.posiciones = new Posiciones();
 
         this.x = x;
         this.y = y;
         this.targetX = x;
         this.targetY = y;
         this.moving = false;
-        posiciones[0] = new Posicion(597, 153);
-        posiciones[1] = new Posicion(601, 494);
-        posiciones[2] = new Posicion(600, 550);
-        posiciones[3] = new Posicion(457, 591);
-        posiciones[4] = new Posicion(349, 582);
-        posiciones[5] = new Posicion(247, 304);
-        posiciones[6] = new Posicion(252, 167);
-        posiciones[7] = new Posicion(305, 88);
-        posiciones[8] = new Posicion(430, 56);
-        posiciones[9] = new Posicion(529, 54);
-
 
     }
 
@@ -179,6 +180,7 @@ public class Avion implements Comparable<Avion>, Runnable {
     }
 
     public void move() {
+
         if (moving) {
             if (x < targetX) {
                 x += 1;
@@ -193,10 +195,12 @@ public class Avion implements Comparable<Avion>, Runnable {
             if (x == targetX && y == targetY) {
                 moving = false;
             }
+            this.panel.setLocation(x - OFFSET_X, y - OFFSET_Y);
         }
     }
 
     public void moveTo(int targetX, int targetY) {
+        this.panel.rotarIcono(calcRotationAngleInDegrees(new Posicion(x, y, false), new Posicion(targetX, targetY, false)));
         this.targetX = targetX;
         this.targetY = targetY;
         this.moving = true;
@@ -212,15 +216,56 @@ public class Avion implements Comparable<Avion>, Runnable {
     }
 
     public void nextPosition() {
-        if (!moving) {
-            moveTo(posiciones[posicion].x, posiciones[posicion].y);
-            posicion = (posicion + 1) % 10;
+        //poner la maquina de estados aca?
+        if (this.estado == Estados.Volando) {
+            this.siguientePosicion = posiciones.esperar.get(posiciones.posicionEsperar);
+            posiciones.posicionEsperar = (posiciones.posicionEsperar + 1) % posiciones.esperar.size();
+        } else if (this.estado == Estados.Aterrizando) {
+            //crear un estado para cada pista
+            //this.siguientePosicion = posiciones.aterrizar01.get();
         }
+
+        if (!moving && this.siguientePosicion.permiso) {
+
+            moveTo(siguientePosicion.x, siguientePosicion.y);
+            posicion = (posicion + 1) % 10;
+
+        }
+    }
+
+    private double calcRotationAngleInDegrees(Posicion centerPt, Posicion targetPt) {
+        // calculate the angle theta from the deltaY and deltaX values
+        // (atan2 returns radians values from [-PI,PI])
+        // 0 currently points EAST.
+        // NOTE: By preserving Y and X param order to atan2,  we are expecting
+        // a CLOCKWISE angle direction.
+        double theta = Math.atan2(targetPt.y - centerPt.y, targetPt.x - centerPt.x);
+
+        // rotate the theta angle clockwise by 90 degrees
+        // (this makes 0 point NORTH)
+        // NOTE: adding to an angle rotates it clockwise.
+        // subtracting would rotate it counter-clockwise
+        theta += Math.PI / 2.0;
+
+        // convert from radians to degrees
+        // this will give you an angle from [0->270],[-180,0]
+        double angle = Math.toDegrees(theta);
+
+        // convert to positive range [0-360)
+        // since we want to prevent negative angles, adjust them now.
+        // we can assume that atan2 will not return a negative value
+        // greater than one partial rotation
+        if (angle < 0) {
+            angle += 360;
+        }
+
+        return angle;
     }
 
 
     public enum Estados {
         Volando, Aterrizando, Despegando, Estacionando, Estacionado, EnPiso
+
     }
 }
 
