@@ -97,6 +97,9 @@ public class Avion implements Comparable<Avion>, Runnable {
         //taxear a donde tenga que ir
     }
 
+    public void aterrizar01() throws InterruptedException{
+
+    }
     public void cambiarPrioridad(int prioridad) {
         //cambiar prioridad
         Avion avion = this;
@@ -144,33 +147,44 @@ public class Avion implements Comparable<Avion>, Runnable {
             //System.out.println("Prioridad " + avion.nombre + " :" + avion.prioridad);
 
             switch (this.estado) {
-                case Volando:
+                case Esperando:
                     //aterrizar el avion y cambiar estado a aterrizando
                     //this.aterrizar();
                     aeropuerto.pedirPermisoAterrizar(this);
-
                     break;
-                case Aterrizando:
-                    //taxear a porton y cambiar estado a estacionando
-                    this.taxear(0, 0);
-                    this.estado = Avion.Estados.Estacionando;
+                case Aterrizando01:
                     break;
-                case Despegando:
-                    //despegar el avion y cambiar el estado a volando?
-                    this.despegar();
+                case Aterrizando06:
                     break;
-                case Estacionando:
-                    //estacionar y cambiar el estado a estacionado
-                    this.estacionar();
+                case Aterrizando19:
                     break;
-                case Estacionado:
-                    //dejar de actualizar avion y quizas borrarlo de la lista de aviones? o ponerle el estado EnPiso
-
+                case Aterrizando24:
                     break;
-                case EnPiso:
-                    //taxear a cabecera de pista, y cambiar estado a despegando
-                    this.taxear(0, 0);
-                    this.estado = Avion.Estados.Despegando;
+                case Despegando01:
+                    break;
+                case Despegando06:
+                    break;
+                case Despegando19:
+                    break;
+                case Despegando24:
+                    break;
+                case Taxeando01Porton:
+                    break;
+                case Taxeando06Porton:
+                    break;
+                case Taxeando19Porton:
+                    break;
+                case Taxeando24Porton:
+                    break;
+                case TaxeandoPorton01:
+                    break;
+                case TaxeandoPorton06:
+                    break;
+                case TaxeandoPorton19:
+                    break;
+                case TaxeandoPorton24:
+                    break;
+                case EnPorton:
                     break;
             }
 
@@ -231,6 +245,176 @@ public class Avion implements Comparable<Avion>, Runnable {
             posicion = (posicion + 1) % 10;
 
         }
+        if (!moving) {
+            posicion++;
+            switch (this.estado) {
+                case Esperando:
+                    //aterrizar el avion y cambiar estado a aterrizando
+                    //this.aterrizar();
+                    this.siguientePosicion = posiciones.esperar.get(posiciones.posicionEsperar);
+                    posiciones.posicionEsperar = (posiciones.posicionEsperar + 1) % posiciones.esperar.size();
+
+                    if ((this.x == this.posiciones.esperar.get(2).x
+                            && this.y == this.posiciones.esperar.get(2).y) && tienePermisoUsarPista) {
+                        //cambiar de estado a aterrizando por la pista activa del momento
+                        posicion = 0;
+                    }
+
+                    break;
+                case Aterrizando01:
+                    posiciones.posicionEsperar = 0;
+                    this.siguientePosicion = posiciones.aterrizar01.get(posicion);
+
+                    if (this.x == posiciones.aterrizar01.get(posiciones.aterrizar01.size()).x
+                            && this.y == posiciones.aterrizar01.get(posiciones.aterrizar01.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a taxeando de 01 a porton
+                        posicion = 0;
+                    }
+                    break;
+                case Aterrizando06:
+                    posiciones.posicionEsperar = 0;
+                    this.siguientePosicion = posiciones.aterrizar06.get(posicion);
+
+                    if (this.x == posiciones.aterrizar06.get(posiciones.aterrizar06.size()).x
+                            && this.y == posiciones.aterrizar06.get(posiciones.aterrizar06.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a taxeando de 06 a porton
+                        posicion = 0;
+                    }
+                    break;
+                case Aterrizando19:
+                    posiciones.posicionEsperar = 0;
+                    this.siguientePosicion = posiciones.aterrizar19.get(posicion);
+                    if (this.x == posiciones.aterrizar19.get(posiciones.aterrizar19.size()).x
+                            && this.y == posiciones.aterrizar19.get(posiciones.aterrizar19.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a taxeando de 19 a porton
+                        posicion = 0;
+                    }
+                    break;
+                case Aterrizando24:
+                    posiciones.posicionEsperar = 0;
+                    this.siguientePosicion = posiciones.aterrizar24.get(posicion);
+
+                    if (this.x == posiciones.aterrizar24.get(posiciones.aterrizar24.size()).x
+                            && this.y == posiciones.aterrizar24.get(posiciones.aterrizar24.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a taxeando de 24 a porton
+                        posicion = 0;
+                    }
+                    break;
+                case Despegando01:
+                    this.siguientePosicion = posiciones.despegar01.get(posicion);
+
+                    if (this.x == posiciones.despegar01.get(posiciones.despegar01.size()).x
+                            && this.y == posiciones.despegar01.get(posiciones.despegar01.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a esperando
+                        posicion = 0;
+                    }
+                    break;
+                case Despegando06:
+                    this.siguientePosicion = posiciones.despegar06.get(posicion);
+
+                    if (this.x == posiciones.despegar06.get(posiciones.despegar06.size()).x
+                            && this.y == posiciones.despegar06.get(posiciones.despegar06.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a esperando
+                        posicion = 0;
+                    }
+                    break;
+                case Despegando19:
+                    this.siguientePosicion = posiciones.despegar19.get(posicion);
+
+                    if (this.x == posiciones.despegar19.get(posiciones.despegar19.size()).x
+                            && this.y == posiciones.despegar19.get(posiciones.despegar19.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a esperando
+                        posicion = 0;
+                    }
+                    break;
+                case Despegando24:
+                    this.siguientePosicion = posiciones.despegar24.get(posicion);
+
+                    if (this.x == posiciones.despegar24.get(posiciones.despegar24.size()).x
+                            && this.y == posiciones.despegar24.get(posiciones.despegar24.size()).y) {
+                        //ya salio de la pista, lo cambio de estado a esperando
+                        posicion = 0;
+                    }
+                    break;
+                case Taxeando01Porton:
+                    this.siguientePosicion = posiciones.taxear01porton.get(posicion);
+
+                    if (this.x == posiciones.taxear01porton.get(posiciones.taxear01porton.size()).x
+                            && this.y == posiciones.taxear01porton.get(posiciones.taxear01porton.size()).y) {
+                        //ya llego al porton, lo cambio de estado a en porton
+                        posicion = 0;
+                    }
+                    break;
+                case Taxeando06Porton:
+                    this.siguientePosicion = posiciones.taxear06porton.get(posicion);
+
+                    if (this.x == posiciones.taxear06porton.get(posiciones.taxear06porton.size()).x
+                            && this.y == posiciones.taxear06porton.get(posiciones.taxear06porton.size()).y) {
+                        //ya llego al porton, lo cambio de estado a en porton
+                        posicion = 0;
+                    }
+                    break;
+                case Taxeando19Porton:
+                    this.siguientePosicion = posiciones.taxear19porton.get(posicion);
+
+                    if (this.x == posiciones.taxear19porton.get(posiciones.taxear19porton.size()).x
+                            && this.y == posiciones.taxear19porton.get(posiciones.taxear19porton.size()).y) {
+                        //ya llego al porton, lo cambio de estado a en porton
+                        posicion = 0;
+                    }
+                    break;
+                case Taxeando24Porton:
+                    this.siguientePosicion = posiciones.taxear24porton.get(posicion);
+
+                    if (this.x == posiciones.taxear24porton.get(posiciones.taxear24porton.size()).x
+                            && this.y == posiciones.taxear24porton.get(posiciones.taxear24porton.size()).y) {
+                        //ya llego al porton, lo cambio de estado a en porton
+                        posicion = 0;
+                    }
+                    break;
+                case TaxeandoPorton01:
+                    this.siguientePosicion = posiciones.taxearporton01.get(posicion);
+
+                    if (this.x == posiciones.taxearporton01.get(posiciones.taxearporton01.size()).x
+                            && this.y == posiciones.taxearporton01.get(posiciones.taxearporton01.size()).y) {
+                        //ya llego a la pista, lo cambio a despegando por la pista 01
+                        posicion = 0;
+                    }
+                    break;
+                case TaxeandoPorton06:
+                    this.siguientePosicion = posiciones.taxearporton06.get(posicion);
+
+                    if (this.x == posiciones.taxearporton06.get(posiciones.taxearporton06.size()).x
+                            && this.y == posiciones.taxearporton06.get(posiciones.taxearporton06.size()).y) {
+                        //ya llego a la pista, lo cambio a despegando por la pista 06
+                        posicion = 0;
+                    }
+                    break;
+                case TaxeandoPorton19:
+                    this.siguientePosicion = posiciones.taxearporton19.get(posicion);
+
+                    if (this.x == posiciones.taxearporton19.get(posiciones.taxearporton19.size()).x
+                            && this.y == posiciones.taxearporton19.get(posiciones.taxearporton19.size()).y) {
+                        //ya llego a la pista, lo cambio a despegando por la pista 19
+                        posicion = 0;
+                    }
+                    break;
+                case TaxeandoPorton24:
+                    this.siguientePosicion = posiciones.taxearporton24.get(posicion);
+
+                    if (this.x == posiciones.taxearporton24.get(posiciones.taxearporton24.size()).x
+                            && this.y == posiciones.taxearporton24.get(posiciones.taxearporton24.size()).y) {
+                        //ya llego a la pista, lo cambio a despegando por la pista 24
+                        posicion = 0;
+                    }
+                    break;
+                case EnPorton:
+                    //esperar algunos segundos random, y despues ver cual es la pista activa y taxear a ella
+
+                    break;
+            }
+            moveTo(this.siguientePosicion.x, this.siguientePosicion.y);
+        }
     }
 
     private double calcRotationAngleInDegrees(Posicion centerPt, Posicion targetPt) {
@@ -264,7 +448,13 @@ public class Avion implements Comparable<Avion>, Runnable {
 
 
     public enum Estados {
-        Volando, Aterrizando, Despegando, Estacionando, Estacionado, EnPiso
+        Despegando01, Despegando06, Despegando19, Despegando24,
+        Esperando,
+        Aterrizando01, Aterrizando06, Aterrizando19, Aterrizando24,
+        Taxeando01Porton, Taxeando06Porton, Taxeando19Porton, Taxeando24Porton,
+        TaxeandoPorton01, TaxeandoPorton06, TaxeandoPorton19, TaxeandoPorton24,
+
+        EnPorton
 
     }
 }

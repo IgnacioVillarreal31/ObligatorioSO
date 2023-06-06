@@ -81,42 +81,4 @@ public class Aeropuerto implements Runnable {
 
     }
 
-    private void estados(Avion avion) {
-        try {
-            //System.out.println("Prioridad " + avion.nombre + " :" + avion.prioridad);
-
-            switch (avion.estado) {
-                case Volando:
-                    //aterrizar el avion y cambiar estado a aterrizando
-                    avion.aterrizar();
-                    break;
-                case Aterrizando:
-                    //taxear a porton y cambiar estado a estacionando
-                    avion.taxear(0, 0);
-                    avion.estado = Avion.Estados.Estacionando;
-                    break;
-                case Despegando:
-                    //despegar el avion y cambiar el estado a volando?
-                    avion.despegar();
-                    break;
-                case Estacionando:
-                    //estacionar y cambiar el estado a estacionado
-                    avion.estacionar();
-                    break;
-                case Estacionado:
-                    //dejar de actualizar avion y quizas borrarlo de la lista de aviones? o ponerle el estado EnPiso
-
-                    break;
-                case EnPiso:
-                    //taxear a cabecera de pista, y cambiar estado a despegando
-                    avion.taxear(0, 0);
-                    avion.estado = Avion.Estados.Despegando;
-                    break;
-            }
-
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
 }
