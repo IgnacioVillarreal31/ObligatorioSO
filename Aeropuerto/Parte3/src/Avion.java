@@ -28,15 +28,17 @@ public class Avion implements Comparable<Avion>, Runnable {
 
     private int posicion = 0;
 
-    private final int OFFSET_X = 20;
+    private final int OFFSET_X = 15;
 
-    private final int OFFSET_Y = 20;
+    private final int OFFSET_Y = 15;
 
     public Panel panel;
 
     public Posiciones posiciones;
 
     public Posicion siguientePosicion;
+
+    public Pista pistaUsada;
 
     public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado, int x, int y, ImageIcon icono) {
         this.aeropuerto = aeropuerto;
@@ -49,7 +51,7 @@ public class Avion implements Comparable<Avion>, Runnable {
         this.panel = new Panel(nombre, estado.toString(), icono);
 
         this.posiciones = new Posiciones();
-
+        this.posicion = 0;
         this.x = x;
         this.y = y;
         this.targetX = x;
@@ -79,8 +81,9 @@ public class Avion implements Comparable<Avion>, Runnable {
             Thread.sleep(1000);
             this.tienePermisoUsarPista = true;
         }
-
-        aeropuerto.pistaActiva.usar.acquire();
+        pistaUsada = aeropuerto.pistaActiva;
+        pistaUsada.usar.acquire();
+        /*
         System.out.println(this.nombre + " va a usar la pista para aterrizar");
         Thread.sleep(1000);
         //aterizar
@@ -93,13 +96,26 @@ public class Avion implements Comparable<Avion>, Runnable {
             aeropuerto.permisoUsarPista.release();
             System.out.println(this.nombre + " devolvio el permiso para aterrizar");
             Thread.sleep(1000);
-        }
+        }*/
         //taxear a donde tenga que ir
     }
 
-    public void aterrizar01() throws InterruptedException{
+
+    public void aterrizar01() throws InterruptedException {
+
+        //pedir permiso para usar la pista, si no tiene prioridad, y despues usar la pista
+
+        if (this.prioridad != 0) {
+            aeropuerto.permisoUsarPista.acquire();
+            System.out.println(this.nombre + " pidio permiso para aterrizar");
+            Thread.sleep(1000);
+            this.tienePermisoUsarPista = true;
+        }
+        pistaUsada = aeropuerto.pistaActiva;
+        pistaUsada.usar.acquire();
 
     }
+
     public void cambiarPrioridad(int prioridad) {
         //cambiar prioridad
         Avion avion = this;
@@ -131,12 +147,12 @@ public class Avion implements Comparable<Avion>, Runnable {
     }
 
     public void despegar() {
-        this.estado = Estados.Volando;
+
     }
 
     public void estacionar() {
         //ver de ir a un porton aleatorio y como cruzar la pista, entre otros.
-        this.estado = Estados.Estacionado;
+
     }
 
     @Override
@@ -229,184 +245,189 @@ public class Avion implements Comparable<Avion>, Runnable {
         g.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
     }
 
+
     public void nextPosition() {
         //poner la maquina de estados aca?
-        if (this.estado == Estados.Volando) {
-            this.siguientePosicion = posiciones.esperar.get(posiciones.posicionEsperar);
-            posiciones.posicionEsperar = (posiciones.posicionEsperar + 1) % posiciones.esperar.size();
-        } else if (this.estado == Estados.Aterrizando) {
-            //crear un estado para cada pista
-            //this.siguientePosicion = posiciones.aterrizar01.get();
-        }
 
-        if (!moving && this.siguientePosicion.permiso) {
-
-            moveTo(siguientePosicion.x, siguientePosicion.y);
-            posicion = (posicion + 1) % 10;
-
-        }
         if (!moving) {
-            posicion++;
             switch (this.estado) {
                 case Esperando:
                     //aterrizar el avion y cambiar estado a aterrizando
-                    //this.aterrizar();
                     this.siguientePosicion = posiciones.esperar.get(posiciones.posicionEsperar);
                     posiciones.posicionEsperar = (posiciones.posicionEsperar + 1) % posiciones.esperar.size();
 
                     if ((this.x == this.posiciones.esperar.get(2).x
                             && this.y == this.posiciones.esperar.get(2).y) && tienePermisoUsarPista) {
                         //cambiar de estado a aterrizando por la pista activa del momento
-                        posicion = 0;
+                        //pero llamar a los semaforos y eso en la otra maquina de estados
+                        posicion = -1;
+                        break;
                     }
 
                     break;
                 case Aterrizando01:
                     posiciones.posicionEsperar = 0;
+
+                    if (this.x == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).x
+                            && this.y == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).y) {
+                        //ya salio de la pista, lo cambio de estado a taxeando de 01 a porton
+                        posicion = -1;
+                        break;
+                    }
                     this.siguientePosicion = posiciones.aterrizar01.get(posicion);
 
-                    if (this.x == posiciones.aterrizar01.get(posiciones.aterrizar01.size()).x
-                            && this.y == posiciones.aterrizar01.get(posiciones.aterrizar01.size()).y) {
-                        //ya salio de la pista, lo cambio de estado a taxeando de 01 a porton
-                        posicion = 0;
-                    }
                     break;
                 case Aterrizando06:
                     posiciones.posicionEsperar = 0;
-                    this.siguientePosicion = posiciones.aterrizar06.get(posicion);
 
-                    if (this.x == posiciones.aterrizar06.get(posiciones.aterrizar06.size()).x
-                            && this.y == posiciones.aterrizar06.get(posiciones.aterrizar06.size()).y) {
+                    if (this.x == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).x
+                            && this.y == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 06 a porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.aterrizar06.get(posicion);
                     break;
                 case Aterrizando19:
                     posiciones.posicionEsperar = 0;
-                    this.siguientePosicion = posiciones.aterrizar19.get(posicion);
-                    if (this.x == posiciones.aterrizar19.get(posiciones.aterrizar19.size()).x
-                            && this.y == posiciones.aterrizar19.get(posiciones.aterrizar19.size()).y) {
+                    if (this.x == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).x
+                            && this.y == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 19 a porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.aterrizar19.get(posicion);
                     break;
                 case Aterrizando24:
                     posiciones.posicionEsperar = 0;
-                    this.siguientePosicion = posiciones.aterrizar24.get(posicion);
 
-                    if (this.x == posiciones.aterrizar24.get(posiciones.aterrizar24.size()).x
-                            && this.y == posiciones.aterrizar24.get(posiciones.aterrizar24.size()).y) {
+                    if (this.x == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).x
+                            && this.y == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 24 a porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.aterrizar24.get(posicion);
                     break;
                 case Despegando01:
-                    this.siguientePosicion = posiciones.despegar01.get(posicion);
 
-                    if (this.x == posiciones.despegar01.get(posiciones.despegar01.size()).x
-                            && this.y == posiciones.despegar01.get(posiciones.despegar01.size()).y) {
+                    if (this.x == posiciones.despegar01.get(posiciones.despegar01.size() - 1).x
+                            && this.y == posiciones.despegar01.get(posiciones.despegar01.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.despegar01.get(posicion);
                     break;
                 case Despegando06:
-                    this.siguientePosicion = posiciones.despegar06.get(posicion);
 
-                    if (this.x == posiciones.despegar06.get(posiciones.despegar06.size()).x
-                            && this.y == posiciones.despegar06.get(posiciones.despegar06.size()).y) {
+                    if (this.x == posiciones.despegar06.get(posiciones.despegar06.size() - 1).x
+                            && this.y == posiciones.despegar06.get(posiciones.despegar06.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.despegar06.get(posicion);
                     break;
                 case Despegando19:
-                    this.siguientePosicion = posiciones.despegar19.get(posicion);
 
-                    if (this.x == posiciones.despegar19.get(posiciones.despegar19.size()).x
-                            && this.y == posiciones.despegar19.get(posiciones.despegar19.size()).y) {
+                    if (this.x == posiciones.despegar19.get(posiciones.despegar19.size() - 1).x
+                            && this.y == posiciones.despegar19.get(posiciones.despegar19.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.despegar19.get(posicion);
                     break;
                 case Despegando24:
-                    this.siguientePosicion = posiciones.despegar24.get(posicion);
 
-                    if (this.x == posiciones.despegar24.get(posiciones.despegar24.size()).x
-                            && this.y == posiciones.despegar24.get(posiciones.despegar24.size()).y) {
+                    if (this.x == posiciones.despegar24.get(posiciones.despegar24.size() - 1).x
+                            && this.y == posiciones.despegar24.get(posiciones.despegar24.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.despegar24.get(posicion);
                     break;
                 case Taxeando01Porton:
-                    this.siguientePosicion = posiciones.taxear01porton.get(posicion);
 
-                    if (this.x == posiciones.taxear01porton.get(posiciones.taxear01porton.size()).x
-                            && this.y == posiciones.taxear01porton.get(posiciones.taxear01porton.size()).y) {
+                    if (this.x == posiciones.taxear01porton.get(posiciones.taxear01porton.size() - 1).x
+                            && this.y == posiciones.taxear01porton.get(posiciones.taxear01porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxear01porton.get(posicion);
                     break;
                 case Taxeando06Porton:
-                    this.siguientePosicion = posiciones.taxear06porton.get(posicion);
 
-                    if (this.x == posiciones.taxear06porton.get(posiciones.taxear06porton.size()).x
-                            && this.y == posiciones.taxear06porton.get(posiciones.taxear06porton.size()).y) {
+                    if (this.x == posiciones.taxear06porton.get(posiciones.taxear06porton.size() - 1).x
+                            && this.y == posiciones.taxear06porton.get(posiciones.taxear06porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxear06porton.get(posicion);
                     break;
                 case Taxeando19Porton:
-                    this.siguientePosicion = posiciones.taxear19porton.get(posicion);
 
-                    if (this.x == posiciones.taxear19porton.get(posiciones.taxear19porton.size()).x
-                            && this.y == posiciones.taxear19porton.get(posiciones.taxear19porton.size()).y) {
+                    if (this.x == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).x
+                            && this.y == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxear19porton.get(posicion);
                     break;
                 case Taxeando24Porton:
-                    this.siguientePosicion = posiciones.taxear24porton.get(posicion);
 
-                    if (this.x == posiciones.taxear24porton.get(posiciones.taxear24porton.size()).x
-                            && this.y == posiciones.taxear24porton.get(posiciones.taxear24porton.size()).y) {
+                    if (this.x == posiciones.taxear24porton.get(posiciones.taxear24porton.size() - 1).x
+                            && this.y == posiciones.taxear24porton.get(posiciones.taxear24porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxear24porton.get(posicion);
                     break;
                 case TaxeandoPorton01:
-                    this.siguientePosicion = posiciones.taxearporton01.get(posicion);
 
-                    if (this.x == posiciones.taxearporton01.get(posiciones.taxearporton01.size()).x
-                            && this.y == posiciones.taxearporton01.get(posiciones.taxearporton01.size()).y) {
+                    if (this.x == posiciones.taxearporton01.get(posiciones.taxearporton01.size() - 1).x
+                            && this.y == posiciones.taxearporton01.get(posiciones.taxearporton01.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 01
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxearporton01.get(posicion);
                     break;
                 case TaxeandoPorton06:
-                    this.siguientePosicion = posiciones.taxearporton06.get(posicion);
 
-                    if (this.x == posiciones.taxearporton06.get(posiciones.taxearporton06.size()).x
-                            && this.y == posiciones.taxearporton06.get(posiciones.taxearporton06.size()).y) {
+                    if (this.x == posiciones.taxearporton06.get(posiciones.taxearporton06.size() - 1).x
+                            && this.y == posiciones.taxearporton06.get(posiciones.taxearporton06.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 06
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxearporton06.get(posicion);
                     break;
                 case TaxeandoPorton19:
-                    this.siguientePosicion = posiciones.taxearporton19.get(posicion);
 
-                    if (this.x == posiciones.taxearporton19.get(posiciones.taxearporton19.size()).x
-                            && this.y == posiciones.taxearporton19.get(posiciones.taxearporton19.size()).y) {
+                    if (this.x == posiciones.taxearporton19.get(posiciones.taxearporton19.size() - 1).x
+                            && this.y == posiciones.taxearporton19.get(posiciones.taxearporton19.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 19
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxearporton19.get(posicion);
                     break;
                 case TaxeandoPorton24:
-                    this.siguientePosicion = posiciones.taxearporton24.get(posicion);
 
-                    if (this.x == posiciones.taxearporton24.get(posiciones.taxearporton24.size()).x
-                            && this.y == posiciones.taxearporton24.get(posiciones.taxearporton24.size()).y) {
+                    if (this.x == posiciones.taxearporton24.get(posiciones.taxearporton24.size() - 1).x
+                            && this.y == posiciones.taxearporton24.get(posiciones.taxearporton24.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 24
-                        posicion = 0;
+                        posicion = -1;
+                        break;
                     }
+                    this.siguientePosicion = posiciones.taxearporton24.get(posicion);
                     break;
                 case EnPorton:
                     //esperar algunos segundos random, y despues ver cual es la pista activa y taxear a ella
@@ -414,6 +435,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
             }
             moveTo(this.siguientePosicion.x, this.siguientePosicion.y);
+            if (!this.siguientePosicion.necesitaPermiso) {
+                posicion++;
+            }
         }
     }
 
