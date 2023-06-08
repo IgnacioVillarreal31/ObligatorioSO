@@ -40,6 +40,8 @@ public class Avion implements Comparable<Avion>, Runnable {
 
     public Pista pistaUsada;
 
+    public String numeroPistaUsada;
+
     public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado, int x, int y, ImageIcon icono) {
         this.aeropuerto = aeropuerto;
         this.nivelCombustible = nivelCombustible;
@@ -78,41 +80,100 @@ public class Avion implements Comparable<Avion>, Runnable {
         if (this.prioridad != 0) {
             aeropuerto.permisoUsarPista.acquire();
             System.out.println(this.nombre + " pidio permiso para aterrizar");
-            Thread.sleep(1000);
-            this.tienePermisoUsarPista = true;
         }
-        pistaUsada = aeropuerto.pistaActiva;
-        pistaUsada.usar.acquire();
-        /*
-        System.out.println(this.nombre + " va a usar la pista para aterrizar");
-        Thread.sleep(1000);
-        //aterizar
-        aeropuerto.pistaActiva.usar.release();
-        System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista");
-        this.estado = Estados.Aterrizando;
-        Thread.sleep(1000);
 
-        if (this.tienePermisoUsarPista) {
-            aeropuerto.permisoUsarPista.release();
-            System.out.println(this.nombre + " devolvio el permiso para aterrizar");
-            Thread.sleep(1000);
-        }*/
-        //taxear a donde tenga que ir
+        Object[] pista = aeropuerto.getPistaActiva();
+        pistaUsada = (Pista) pista[0];
+        pistaUsada.usar.acquire();
+        this.tienePermisoUsarPista = true;
+        //ver la pista activa
+        this.numeroPistaUsada = pista[1].toString();
+        if (this.numeroPistaUsada == "01") {
+            this.estado = Estados.Aterrizando01;
+            //this.aterrizar01();
+
+        } else if (this.numeroPistaUsada == "19") {
+            this.estado = Estados.Aterrizando19;
+            //this.aterrizar19();
+
+        } else if (this.numeroPistaUsada == "06") {
+            this.estado = Estados.Aterrizando06;
+            //this.aterrizar06();
+        } else {
+            //pista 24
+            this.estado = Estados.Aterrizando24;
+            //this.aterrizar24();
+        }
+        System.out.println(this.nombre + " va a usar la pista " + this.numeroPistaUsada + " para aterrizar.");
+        //actualiza el estado en la parte grafica
+        this.panel.cambiarEstado(this.estado.toString());
     }
 
 
     public void aterrizar01() throws InterruptedException {
-
-        //pedir permiso para usar la pista, si no tiene prioridad, y despues usar la pista
-
+        //aterizar
+        pistaUsada.usar.release();
+        System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 01.");
         if (this.prioridad != 0) {
-            aeropuerto.permisoUsarPista.acquire();
-            System.out.println(this.nombre + " pidio permiso para aterrizar");
-            Thread.sleep(1000);
-            this.tienePermisoUsarPista = true;
+            aeropuerto.permisoUsarPista.release();
         }
-        pistaUsada = aeropuerto.pistaActiva;
-        pistaUsada.usar.acquire();
+        this.tienePermisoUsarPista = false;
+
+    }
+
+    public void taxear01Porton() {
+        //salgo de la pista
+        pistaUsada.usar.release();
+        System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 01.");
+        if (this.prioridad != 0) {
+            aeropuerto.permisoUsarPista.release();
+        }
+        this.tienePermisoUsarPista = false;
+    }
+
+    public void taxear06Porton() {
+        //salgo de la pista
+        pistaUsada.usar.release();
+        System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 06.");
+        if (this.prioridad != 0) {
+            aeropuerto.permisoUsarPista.release();
+        }
+        this.tienePermisoUsarPista = false;
+    }
+
+
+    public void taxear19Porton() {
+        //salgo de la pista
+        pistaUsada.usar.release();
+        System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 19.");
+        if (this.prioridad != 0) {
+            aeropuerto.permisoUsarPista.release();
+        }
+        this.tienePermisoUsarPista = false;
+    }
+
+    public void taxear24Porton() {
+        //salgo de la pista
+        pistaUsada.usar.release();
+        System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 24.");
+        if (this.prioridad != 0) {
+            aeropuerto.permisoUsarPista.release();
+        }
+        this.tienePermisoUsarPista = false;
+    }
+
+    public void aterrizar06() throws InterruptedException {
+
+
+    }
+
+    public void aterrizar19() throws InterruptedException {
+
+
+    }
+
+    public void aterrizar24() throws InterruptedException {
+
 
     }
 
@@ -256,10 +317,18 @@ public class Avion implements Comparable<Avion>, Runnable {
                     this.siguientePosicion = posiciones.esperar.get(posiciones.posicionEsperar);
                     posiciones.posicionEsperar = (posiciones.posicionEsperar + 1) % posiciones.esperar.size();
 
-                    if ((this.x == this.posiciones.esperar.get(2).x
-                            && this.y == this.posiciones.esperar.get(2).y) && tienePermisoUsarPista) {
+                    if ((this.x == this.posiciones.esperar.get(2).x && this.y == this.posiciones.esperar.get(2).y) && tienePermisoUsarPista) {
                         //cambiar de estado a aterrizando por la pista activa del momento
                         //pero llamar a los semaforos y eso en la otra maquina de estados
+                        if (this.numeroPistaUsada == "01") {
+                            this.estado = Estados.Aterrizando01;
+                        } else if (this.numeroPistaUsada == "06") {
+                            this.estado = Estados.Aterrizando06;
+                        } else if (this.numeroPistaUsada == "19") {
+                            this.estado = Estados.Aterrizando19;
+                        } else {
+                            this.estado = Estados.Aterrizando24;
+                        }
                         posicion = -1;
                         break;
                     }
@@ -268,9 +337,10 @@ public class Avion implements Comparable<Avion>, Runnable {
                 case Aterrizando01:
                     posiciones.posicionEsperar = 0;
 
-                    if (this.x == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).x
-                            && this.y == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).y) {
+                    if (this.x == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).x && this.y == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 01 a porton
+                        this.taxear01Porton();
+                        this.estado = Estados.Taxeando01Porton;
                         posicion = -1;
                         break;
                     }
@@ -280,9 +350,10 @@ public class Avion implements Comparable<Avion>, Runnable {
                 case Aterrizando06:
                     posiciones.posicionEsperar = 0;
 
-                    if (this.x == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).x
-                            && this.y == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).y) {
+                    if (this.x == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).x && this.y == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 06 a porton
+                        this.taxear06Porton();
+                        this.estado = Estados.Taxeando06Porton;
                         posicion = -1;
                         break;
                     }
@@ -290,9 +361,10 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Aterrizando19:
                     posiciones.posicionEsperar = 0;
-                    if (this.x == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).x
-                            && this.y == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).y) {
+                    if (this.x == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).x && this.y == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 19 a porton
+                        this.taxear19Porton();
+                        this.estado = Estados.Taxeando19Porton;
                         posicion = -1;
                         break;
                     }
@@ -301,9 +373,10 @@ public class Avion implements Comparable<Avion>, Runnable {
                 case Aterrizando24:
                     posiciones.posicionEsperar = 0;
 
-                    if (this.x == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).x
-                            && this.y == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).y) {
+                    if (this.x == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).x && this.y == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 24 a porton
+                        this.taxear24Porton();
+                        this.estado = Estados.Taxeando24Porton;
                         posicion = -1;
                         break;
                     }
@@ -311,9 +384,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Despegando01:
 
-                    if (this.x == posiciones.despegar01.get(posiciones.despegar01.size() - 1).x
-                            && this.y == posiciones.despegar01.get(posiciones.despegar01.size() - 1).y) {
+                    if (this.x == posiciones.despegar01.get(posiciones.despegar01.size() - 1).x && this.y == posiciones.despegar01.get(posiciones.despegar01.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
+                        this.estado = Estados.Esperando;
                         posicion = -1;
                         break;
                     }
@@ -321,9 +394,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Despegando06:
 
-                    if (this.x == posiciones.despegar06.get(posiciones.despegar06.size() - 1).x
-                            && this.y == posiciones.despegar06.get(posiciones.despegar06.size() - 1).y) {
+                    if (this.x == posiciones.despegar06.get(posiciones.despegar06.size() - 1).x && this.y == posiciones.despegar06.get(posiciones.despegar06.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
+                        this.estado = Estados.Esperando;
                         posicion = -1;
                         break;
                     }
@@ -331,9 +404,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Despegando19:
 
-                    if (this.x == posiciones.despegar19.get(posiciones.despegar19.size() - 1).x
-                            && this.y == posiciones.despegar19.get(posiciones.despegar19.size() - 1).y) {
+                    if (this.x == posiciones.despegar19.get(posiciones.despegar19.size() - 1).x && this.y == posiciones.despegar19.get(posiciones.despegar19.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
+                        this.estado = Estados.Esperando;
                         posicion = -1;
                         break;
                     }
@@ -341,9 +414,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Despegando24:
 
-                    if (this.x == posiciones.despegar24.get(posiciones.despegar24.size() - 1).x
-                            && this.y == posiciones.despegar24.get(posiciones.despegar24.size() - 1).y) {
+                    if (this.x == posiciones.despegar24.get(posiciones.despegar24.size() - 1).x && this.y == posiciones.despegar24.get(posiciones.despegar24.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a esperando
+                        this.estado = Estados.Esperando;
                         posicion = -1;
                         break;
                     }
@@ -351,9 +424,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Taxeando01Porton:
 
-                    if (this.x == posiciones.taxear01porton.get(posiciones.taxear01porton.size() - 1).x
-                            && this.y == posiciones.taxear01porton.get(posiciones.taxear01porton.size() - 1).y) {
+                    if (this.x == posiciones.taxear01porton.get(posiciones.taxear01porton.size() - 1).x && this.y == posiciones.taxear01porton.get(posiciones.taxear01porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
+                        this.estado = Estados.EnPorton;
                         posicion = -1;
                         break;
                     }
@@ -361,9 +434,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Taxeando06Porton:
 
-                    if (this.x == posiciones.taxear06porton.get(posiciones.taxear06porton.size() - 1).x
-                            && this.y == posiciones.taxear06porton.get(posiciones.taxear06porton.size() - 1).y) {
+                    if (this.x == posiciones.taxear06porton.get(posiciones.taxear06porton.size() - 1).x && this.y == posiciones.taxear06porton.get(posiciones.taxear06porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
+                        this.estado = Estados.EnPorton;
                         posicion = -1;
                         break;
                     }
@@ -371,9 +444,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Taxeando19Porton:
 
-                    if (this.x == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).x
-                            && this.y == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).y) {
+                    if (this.x == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).x && this.y == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
+                        this.estado = Estados.EnPorton;
                         posicion = -1;
                         break;
                     }
@@ -381,9 +454,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case Taxeando24Porton:
 
-                    if (this.x == posiciones.taxear24porton.get(posiciones.taxear24porton.size() - 1).x
-                            && this.y == posiciones.taxear24porton.get(posiciones.taxear24porton.size() - 1).y) {
+                    if (this.x == posiciones.taxear24porton.get(posiciones.taxear24porton.size() - 1).x && this.y == posiciones.taxear24porton.get(posiciones.taxear24porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
+                        this.estado = Estados.EnPorton;
                         posicion = -1;
                         break;
                     }
@@ -391,9 +464,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case TaxeandoPorton01:
 
-                    if (this.x == posiciones.taxearporton01.get(posiciones.taxearporton01.size() - 1).x
-                            && this.y == posiciones.taxearporton01.get(posiciones.taxearporton01.size() - 1).y) {
+                    if (this.x == posiciones.taxearporton01.get(posiciones.taxearporton01.size() - 1).x && this.y == posiciones.taxearporton01.get(posiciones.taxearporton01.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 01
+                        this.estado = Estados.Despegando01;
                         posicion = -1;
                         break;
                     }
@@ -401,9 +474,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case TaxeandoPorton06:
 
-                    if (this.x == posiciones.taxearporton06.get(posiciones.taxearporton06.size() - 1).x
-                            && this.y == posiciones.taxearporton06.get(posiciones.taxearporton06.size() - 1).y) {
+                    if (this.x == posiciones.taxearporton06.get(posiciones.taxearporton06.size() - 1).x && this.y == posiciones.taxearporton06.get(posiciones.taxearporton06.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 06
+                        this.estado = Estados.Despegando06;
                         posicion = -1;
                         break;
                     }
@@ -411,9 +484,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case TaxeandoPorton19:
 
-                    if (this.x == posiciones.taxearporton19.get(posiciones.taxearporton19.size() - 1).x
-                            && this.y == posiciones.taxearporton19.get(posiciones.taxearporton19.size() - 1).y) {
+                    if (this.x == posiciones.taxearporton19.get(posiciones.taxearporton19.size() - 1).x && this.y == posiciones.taxearporton19.get(posiciones.taxearporton19.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 19
+                        this.estado = Estados.Despegando19;
                         posicion = -1;
                         break;
                     }
@@ -421,9 +494,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case TaxeandoPorton24:
 
-                    if (this.x == posiciones.taxearporton24.get(posiciones.taxearporton24.size() - 1).x
-                            && this.y == posiciones.taxearporton24.get(posiciones.taxearporton24.size() - 1).y) {
+                    if (this.x == posiciones.taxearporton24.get(posiciones.taxearporton24.size() - 1).x && this.y == posiciones.taxearporton24.get(posiciones.taxearporton24.size() - 1).y) {
                         //ya llego a la pista, lo cambio a despegando por la pista 24
+                        this.estado = Estados.Despegando24;
                         posicion = -1;
                         break;
                     }
@@ -431,7 +504,7 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case EnPorton:
                     //esperar algunos segundos random, y despues ver cual es la pista activa y taxear a ella
-
+                    this.taxearPistaActiva();
                     break;
             }
             moveTo(this.siguientePosicion.x, this.siguientePosicion.y);
@@ -439,6 +512,10 @@ public class Avion implements Comparable<Avion>, Runnable {
                 posicion++;
             }
         }
+    }
+
+    public void taxearPistaActiva() {
+
     }
 
     private double calcRotationAngleInDegrees(Posicion centerPt, Posicion targetPt) {
@@ -472,11 +549,7 @@ public class Avion implements Comparable<Avion>, Runnable {
 
 
     public enum Estados {
-        Despegando01, Despegando06, Despegando19, Despegando24,
-        Esperando,
-        Aterrizando01, Aterrizando06, Aterrizando19, Aterrizando24,
-        Taxeando01Porton, Taxeando06Porton, Taxeando19Porton, Taxeando24Porton,
-        TaxeandoPorton01, TaxeandoPorton06, TaxeandoPorton19, TaxeandoPorton24,
+        Despegando01, Despegando06, Despegando19, Despegando24, Esperando, Aterrizando01, Aterrizando06, Aterrizando19, Aterrizando24, Taxeando01Porton, Taxeando06Porton, Taxeando19Porton, Taxeando24Porton, TaxeandoPorton01, TaxeandoPorton06, TaxeandoPorton19, TaxeandoPorton24,
 
         EnPorton
 
