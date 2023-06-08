@@ -14,6 +14,7 @@ public class Graficos extends JFrame implements Runnable {
 
     private static final int WIDTH = 1300;
     private static final int HEIGHT = 700;
+    private static final int DELAY = 40;
     public final Aeropuerto aeropuerto;
 
     public Graficos(Aeropuerto aeropuerto) {
@@ -33,7 +34,7 @@ public class Graficos extends JFrame implements Runnable {
         }
         //agrega los aviones a la pantalla
         for (Avion avion : aeropuerto.aviones) {
-            //add(avion.panel);
+            add(avion.panel);
         }
 
         addMouseListener(new MouseAdapter() {
@@ -76,9 +77,9 @@ public class Graficos extends JFrame implements Runnable {
     @Override
     public void run() {
 
-        Timer timer = new Timer(40, e -> {
+        Timer timer = new Timer(DELAY, e -> {
             for (Avion avion : aeropuerto.aviones) {
-                //avion.nextPosition();
+                avion.nextPosition();
                 avion.move();
             }
             repaint();

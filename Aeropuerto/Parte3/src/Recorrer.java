@@ -17,6 +17,7 @@ public class Recorrer implements Runnable {
             while (!aeropuerto.aterrizar.isEmpty()) {
                 Avion avion = aeropuerto.aterrizar.poll();
                 try {
+                    //verificar cual es la pistaActiva del momento
                     avion.aterrizar();
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
