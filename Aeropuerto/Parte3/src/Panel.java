@@ -20,7 +20,8 @@ public class Panel extends JPanel {
         this.id = new JLabel();
         this.ri = new RotatedIcon(icono, 0, true);
         Random rand = new Random();
-        Color color = Color.getHSBColor(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
+        //Color color = Color.getHSBColor(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
+        Color color = Color.RED;
         this.icono.setIcon(this.ri);
         this.id.setText(ID);
         this.id.setForeground(color);

@@ -28,9 +28,11 @@ public class Avion implements Comparable<Avion>, Runnable {
 
     private int posicion = 0;
 
-    private final int OFFSET_X = 15;
+    private int offset_x = 15;
 
-    private final int OFFSET_Y = 15;
+    private int offset_y = 15;
+
+    private final int radio = 15;
 
     public Panel panel;
 
@@ -186,6 +188,19 @@ public class Avion implements Comparable<Avion>, Runnable {
         aeropuerto.aterrizar.offer(avion);
     }
 
+    public void pedirPrioridadAterrizar() {
+        if (this.estado == Estados.Esperando) {
+            //que pida prioridad para aterrizar solo si esta esperando, si ya va a aterrizar, no darle permiso
+            Avion avion = this;
+            aeropuerto.aterrizar.remove(this);
+            avion.timestamp = System.nanoTime();
+            avion.prioridad = 0;
+            aeropuerto.aterrizar.offer(avion);
+            //escribir algo por pantalla??
+            System.out.println(this.nombre + " pidio prioridad para aterrizar.");
+        }
+    }
+
     @Override
     public int compareTo(Avion avion) {
 
@@ -286,12 +301,17 @@ public class Avion implements Comparable<Avion>, Runnable {
             if (x == targetX && y == targetY) {
                 moving = false;
             }
-            this.panel.setLocation(x - OFFSET_X, y - OFFSET_Y);
+            this.panel.setLocation(x - offset_x, y - offset_y);
         }
     }
 
     public void moveTo(int targetX, int targetY) {
-        this.panel.rotarIcono(calcRotationAngleInDegrees(new Posicion(x, y, false), new Posicion(targetX, targetY, false)));
+        double angulo = calcRotationAngleInDegrees(new Posicion(x, y, false), new Posicion(targetX, targetY, false));
+        //this.offset_x = (int) (radio * Math.cos(angulo));
+        //this.offset_y = (int) (radio * Math.sin(angulo));
+
+
+        this.panel.rotarIcono(angulo);
         this.targetX = targetX;
         this.targetY = targetY;
         this.moving = true;

@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -10,7 +12,7 @@ public class Aeropuerto implements Runnable {
     protected Pista pistaActiva;
     protected final Semaphore permisoUsarPista = new Semaphore(15);
     public PriorityBlockingQueue<Avion> aterrizar;
-    protected ArrayList<Avion> aviones;
+    protected HashMap<String, Avion> aviones;
     protected int direccionViento;
 
     protected String numeroPistaActiva;
@@ -21,12 +23,12 @@ public class Aeropuerto implements Runnable {
         pista0624 = new Pista(new Semaphore(1, true), "06-24");
         direccionViento = ThreadLocalRandom.current().nextInt(359); // elige la direccion del viento entre 0 y 359
         aterrizar = new PriorityBlockingQueue<>(15, Avion::compareTo);
-        aviones = new ArrayList<Avion>();
+        aviones = new HashMap<String, Avion>();
         this.elegirPistaActiva();
     }
 
     public void agregar(Avion avion) {
-        this.aviones.add(avion);
+        this.aviones.put(avion.nombre, avion);
     }
 
     private void elegirPistaActiva() {
@@ -96,7 +98,7 @@ public class Aeropuerto implements Runnable {
 
     public void run() {
         // inicializar todos los aviones
-        for (Avion avion : aviones) {
+        for (Avion avion : aviones.values()) {
             Thread t1 = new Thread(avion);
             t1.setPriority(Thread.NORM_PRIORITY);
             t1.start();
