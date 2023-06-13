@@ -12,6 +12,8 @@ public class Scheduller {
     private List<IRecurso> recursosDisponibles;
 
 
+    //Inicializamos variables y el semáforo en 1 para que sólo un proceso
+    //acceda a la vez.
     public Scheduller(List<IRecurso> recursos) {
         this.colaLista = new PriorityQueue<>();
         this.listaBloqueado = new LinkedList<>();
@@ -22,6 +24,9 @@ public class Scheduller {
         this.recursosDisponibles = recursos;
     }
 
+
+    //Agregamos todos los procesos a las listas y colas correspondientes
+    //según su estado.
     public void agregarProceso(Proceso proceso) throws InterruptedException {
         if (proceso.estado == Proceso.Estados.Listo) {
             colaLista.offer(proceso);
@@ -31,19 +36,21 @@ public class Scheduller {
         }
     }
 
+    //Método principal en el que se ejecutan los procesos, si no se
+    //pueden ejecutar pasan a las otras listas, bloqueándolos o
+    //suspendiéndolos, o ambas.
     public void ejecutarProcesos() throws InterruptedException {
         while (!colaLista.isEmpty()) {
             long currentTime = System.currentTimeMillis();
             Proceso proceso = colaLista.peek();
             long tiempoRestante = proceso.tiempoEjecucion - currentTime;
-            // Run the task
             if (tiempoRestante <= 0 && solicitarRecurso(proceso) == true) { //Si el tiempo restante es negativo el proceso debe ejecutarse de inmediato
-                semaforo.acquire(); // adquirimos el semáforo antes de ejecutar el proceso
+                semaforo.acquire(); //Adquirimos el semáforo antes de ejecutar el proceso
                 proceso.run();
                 liberarRecurso(proceso);
-                semaforo.release(); // liberamos el semáforo para permitir que otro proceso lo adquiera
+                semaforo.release(); //Liberamos el semáforo para permitir que otro proceso lo adquiera
             }else if (tiempoRestante > 0 && solicitarRecurso(proceso) == true){
-                semaforo.acquire(); // adquirimos el semáforo antes de ejecutar el proceso
+                semaforo.acquire(); //Adquirimos el semáforo antes de ejecutar el proceso
                 proceso.runMax();
                 for (IRecurso r: proceso.recursosUsados) {
                     r.cambiarEstadoDisponible();
@@ -51,9 +58,9 @@ public class Scheduller {
                 colaLista.poll();
                 proceso.tiempoEjecucion -= currentTime;
                 colaLista.offer(proceso);
-                semaforo.release(); // liberamos el semáforo para permitir que otro proceso lo adquiera
+                semaforo.release(); //Liberamos el semáforo para permitir que otro proceso lo adquiera
             }
-            // checkeo los bloqueados, para ver si van denuevo a la cola lista
+            //Checkeo los bloqueados, para ver si van denuevo a la cola lista
             List<Proceso> procesosParaEliminar = new ArrayList<>();
             for (Proceso p: listaBloqueado) {
                 salidaBolqueado(p,procesosParaEliminar);
@@ -68,6 +75,8 @@ public class Scheduller {
         }
     }
 
+    //Chequeo de bloqueados, para sacarlos de este estado y pasarlos
+    //a listo
     public void salidaBolqueado(Proceso proceso, List<Proceso> procesosParaEliminar){
         boolean disponible = true;
         boolean ruptura = false;
@@ -95,6 +104,8 @@ public class Scheduller {
         }
     }
 
+    //Chequeo de suspendidosListo, para sacarlos de este estado y pasarlos
+    //a listo
     public void salidaSuspendidoListo(Proceso proceso, List<Proceso> procesosParaSuspender){
         Boolean ruptura = true;
         for (IRecurso recursos : proceso.recursosUsados){
@@ -110,6 +121,9 @@ public class Scheduller {
         }
     }
 
+    //Chequea si los recursos de un proceso están disponibles para ser
+    //ejecutado, sino lo pone en otros estados, ya sea bloqueado como,
+    //suspendido bloqueado.
     public boolean solicitarRecurso(Proceso proceso) {
         boolean disponible = true;
         boolean ruptura = false;
@@ -140,6 +154,7 @@ public class Scheduller {
         return disponible;
     }
 
+    //Una vez finalizado un proceso, libera los recursos de este
     public void liberarRecurso(Proceso proceso) {
         for (IRecurso r: proceso.recursosUsados) {
             r.cambiarEstadoDisponible();

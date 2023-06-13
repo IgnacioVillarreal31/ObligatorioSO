@@ -7,6 +7,7 @@ import java.io.FileReader;
 
 public class ManejadorDeArchivos {
 
+    //Método para leer un archivo
     public static String leerArchivo(String filePath) {
         StringBuilder contenido = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -21,6 +22,7 @@ public class ManejadorDeArchivos {
         return contenido.toString();
     }
 
+    //Método para escribir un archivo
     public static void escribirArchivo(String filePath, String contenido) {
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath, true)))) {
             writer.write(contenido);
