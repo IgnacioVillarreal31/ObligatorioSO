@@ -14,6 +14,7 @@ public class Recorrer implements Runnable {
     @Override
     public void run() {
         while (true) {
+            //recorrer las tres listas de prioridad, una para aterrizar, otra para usar la pista1 y otra para usar la pista2
             while (!aeropuerto.aterrizar.isEmpty()) {
                 Avion avion = aeropuerto.aterrizar.poll();
                 try {

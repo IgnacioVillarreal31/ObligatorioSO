@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -10,8 +12,10 @@ public class Aeropuerto implements Runnable {
     protected Pista pistaActiva;
     protected final Semaphore permisoUsarPista = new Semaphore(15);
     public PriorityBlockingQueue<Avion> aterrizar;
-    protected ArrayList<Avion> aviones;
+    protected HashMap<String, Avion> aviones;
     protected int direccionViento;
+
+    protected String numeroPistaActiva;
 
     public Aeropuerto() {
         //fair le da el lock al thread con mayor tiempo (Funciona de forma FIFO)
@@ -19,38 +23,48 @@ public class Aeropuerto implements Runnable {
         pista0624 = new Pista(new Semaphore(1, true), "06-24");
         direccionViento = ThreadLocalRandom.current().nextInt(359); // elige la direccion del viento entre 0 y 359
         aterrizar = new PriorityBlockingQueue<>(15, Avion::compareTo);
-        aviones = new ArrayList<Avion>();
+        aviones = new HashMap<String, Avion>();
         this.elegirPistaActiva();
     }
 
     public void agregar(Avion avion) {
-        this.aviones.add(avion);
+        this.aviones.put(avion.nombre, avion);
     }
 
     private void elegirPistaActiva() {
+        int direccionViento = this.getDireccionViento();
 
-        if (this.getDireccionViento() >= 30 && this.getDireccionViento() <= 119) {
+        if (direccionViento >= 30 && direccionViento <= 119) {
             //pista 24
             //this.pistaActiva = pista0624;
             this.setPistaActiva("24");
-        } else if (this.getDireccionViento() >= 120 && this.getDireccionViento() <= 209) {
+            this.setNumeroPistaActiva("24");
+        } else if (direccionViento >= 120 && direccionViento <= 209) {
             //pista 19
             //this.pistaActiva = pista0119;
             this.setPistaActiva("19");
-        } else if (this.getDireccionViento() >= 210 && this.getDireccionViento() <= 299) {
+            this.setNumeroPistaActiva("19");
+        } else if (direccionViento >= 210 && direccionViento <= 299) {
             //pista 06
             //this.pistaActiva = pista0624;
             this.setPistaActiva("06");
+            this.setNumeroPistaActiva("06");
         } else {
             //pista 01
             //this.pistaActiva = pista0119;
             this.setPistaActiva("01");
+            this.setNumeroPistaActiva("01");
         }
 
     }
 
-    public synchronized Pista getPistaActiva() {
-        return this.pistaActiva;
+    private synchronized void setNumeroPistaActiva(String pistaActiva) {
+        this.numeroPistaActiva = pistaActiva;
+    }
+
+    public synchronized Object[] getPistaActiva() {
+        Object[] arr = new Object[]{this.pistaActiva, this.getNumeroPistaActiva()};
+        return arr;
     }
 
     public synchronized void setPistaActiva(String pista) {
@@ -59,6 +73,10 @@ public class Aeropuerto implements Runnable {
         } else if (pista.equals("01") || pista.equals("19")) {
             this.pistaActiva = pista0119;
         }
+    }
+
+    public synchronized String getNumeroPistaActiva() {
+        return this.numeroPistaActiva;
     }
 
     public synchronized int getDireccionViento() {
@@ -80,7 +98,7 @@ public class Aeropuerto implements Runnable {
 
     public void run() {
         // inicializar todos los aviones
-        for (Avion avion : aviones) {
+        for (Avion avion : aviones.values()) {
             Thread t1 = new Thread(avion);
             t1.setPriority(Thread.NORM_PRIORITY);
             t1.start();
