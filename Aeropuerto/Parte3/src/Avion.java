@@ -1,11 +1,15 @@
+import javax.net.ssl.ExtendedSSLSession;
 import javax.swing.*;
 import java.awt.*;
 import java.security.Timestamp;
+import java.util.Random;
 
-public class Avion implements Comparable<Avion>, Runnable {
+public class Avion extends Thread implements Comparable<Avion>, Runnable {
 
     final int SQUARE_SIZE = 25;
     protected boolean tienePrioridad = false;
+
+    protected boolean pidioPermisoParaAterrizar = false;
     private boolean tienePermisoUsarPista = false;
     protected int prioridad;
     protected String nombre;
@@ -44,6 +48,10 @@ public class Avion implements Comparable<Avion>, Runnable {
 
     public String numeroPistaUsada;
 
+    protected Recorrer recorrer;
+
+    public boolean continuar = true;
+
     public Avion(Aeropuerto aeropuerto, int prioridad, String nombre, int nivelCombustible, Estados estado, int x, int y, ImageIcon icono) {
         this.aeropuerto = aeropuerto;
         this.nivelCombustible = nivelCombustible;
@@ -62,6 +70,12 @@ public class Avion implements Comparable<Avion>, Runnable {
         this.targetY = y;
         this.moving = false;
 
+        this.siguientePosicion = new Posicion(x, y, false);
+
+    }
+
+    public void setRecorrer(Recorrer r) {
+        this.recorrer = r;
     }
 
     public void Despegar() throws InterruptedException {
@@ -77,19 +91,28 @@ public class Avion implements Comparable<Avion>, Runnable {
     }
 
     public void aterrizar() throws InterruptedException {
+        this.tienePermisoUsarPista = false;
         //pedir permiso para usar la pista, si no tiene prioridad, y despues usar la pista
+        /*
+        this.pidioPermisoParaAterrizar = false;
+        this.tienePermisoUsarPista = false;
+        System.out.println("ATERRIZAR: " + this.nombre);
 
         if (this.prioridad != 0) {
+            pidioPermisoParaAterrizar = true;
             aeropuerto.permisoUsarPista.acquire();
             System.out.println(this.nombre + " pidio permiso para aterrizar");
         }
-
+*/
         Object[] pista = aeropuerto.getPistaActiva();
         pistaUsada = (Pista) pista[0];
-        pistaUsada.usar.acquire();
+        //pistaUsada.usar.acquire();
+        aeropuerto.pista0119.usar.acquire();
+        aeropuerto.pista0624.usar.acquire();
         this.tienePermisoUsarPista = true;
         //ver la pista activa
         this.numeroPistaUsada = pista[1].toString();
+        posicion = 0;
         if (this.numeroPistaUsada == "01") {
             this.estado = Estados.Aterrizando01;
             //this.aterrizar01();
@@ -108,59 +131,49 @@ public class Avion implements Comparable<Avion>, Runnable {
         }
         System.out.println(this.nombre + " va a usar la pista " + this.numeroPistaUsada + " para aterrizar.");
         //actualiza el estado en la parte grafica
-        this.panel.cambiarEstado(this.estado.toString());
     }
 
 
     public void aterrizar01() throws InterruptedException {
         //aterizar
-        pistaUsada.usar.release();
+        aeropuerto.pista0624.usar.release();
+        aeropuerto.pista0119.usar.release();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 01.");
-        if (this.prioridad != 0) {
-            aeropuerto.permisoUsarPista.release();
-        }
         this.tienePermisoUsarPista = false;
-
     }
+
 
     public void taxear01Porton() {
         //salgo de la pista
-        pistaUsada.usar.release();
+        //pistaUsada.usar.release();
+        aeropuerto.pista0624.usar.release();
+        aeropuerto.pista0119.usar.release();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 01.");
-        if (this.prioridad != 0) {
-            aeropuerto.permisoUsarPista.release();
-        }
         this.tienePermisoUsarPista = false;
     }
 
     public void taxear06Porton() {
         //salgo de la pista
-        pistaUsada.usar.release();
+        aeropuerto.pista0624.usar.release();
+        aeropuerto.pista0119.usar.release();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 06.");
-        if (this.prioridad != 0) {
-            aeropuerto.permisoUsarPista.release();
-        }
         this.tienePermisoUsarPista = false;
     }
 
 
     public void taxear19Porton() {
         //salgo de la pista
-        pistaUsada.usar.release();
+        aeropuerto.pista0624.usar.release();
+        aeropuerto.pista0119.usar.release();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 19.");
-        if (this.prioridad != 0) {
-            aeropuerto.permisoUsarPista.release();
-        }
         this.tienePermisoUsarPista = false;
     }
 
     public void taxear24Porton() {
         //salgo de la pista
-        pistaUsada.usar.release();
+        aeropuerto.pista0624.usar.release();
+        aeropuerto.pista0119.usar.release();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 24.");
-        if (this.prioridad != 0) {
-            aeropuerto.permisoUsarPista.release();
-        }
         this.tienePermisoUsarPista = false;
     }
 
@@ -181,6 +194,7 @@ public class Avion implements Comparable<Avion>, Runnable {
 
     public void cambiarPrioridad(int prioridad) {
         //cambiar prioridad
+
         Avion avion = this;
         aeropuerto.aterrizar.remove(this);
         avion.timestamp = System.nanoTime();
@@ -189,10 +203,13 @@ public class Avion implements Comparable<Avion>, Runnable {
     }
 
     public void pedirPrioridadAterrizar() {
-        if (this.estado == Estados.Esperando) {
+        if ((this.estado == Estados.Esperando || this.estado == Estados.Aterrizar) && this.prioridad != 0) {
             //que pida prioridad para aterrizar solo si esta esperando, si ya va a aterrizar, no darle permiso
+            //hacerle un v al semaforo
+            //aeropuerto.permisoUsarPista.release();
             Avion avion = this;
             aeropuerto.aterrizar.remove(this);
+            avion.estado = Estados.Esperando;
             avion.timestamp = System.nanoTime();
             avion.prioridad = 0;
             aeropuerto.aterrizar.offer(avion);
@@ -234,55 +251,86 @@ public class Avion implements Comparable<Avion>, Runnable {
     @Override
     public void run() {
         //cambiar de estados viendo si ya esta donde debe estar o no.
+        Timer timer = new Timer(Graficos.DELAY, e -> {
+            try {
+                //System.out.println("Prioridad " + avion.nombre + " :" + avion.prioridad);
+                if (continuar) {
+                    continuar = false;
+                    switch (this.estado) {
+                        case Esperando:
+                            //aterrizar el avion y cambiar estado a aterrizando
+                            //this.aterrizar();
+                            aeropuerto.pedirPermisoAterrizar(this);
+                            break;
+                        case Aterrizar:
+                            this.aterrizar();
+                            break;
+                        case Aterrizando01:
+                            //this.aterrizar01();
+                            break;
+                        case Aterrizando06:
+                            break;
+                        case Aterrizando19:
+                            break;
+                        case Aterrizando24:
+                            break;
+                        case Despegando01:
+                            break;
+                        case Despegando06:
+                            break;
+                        case Despegando19:
+                            break;
+                        case Despegando24:
+                            break;
+                        case Taxeando01Porton:
+                            this.taxear01Porton();
+                            break;
+                        case Taxeando06Porton:
+                            this.taxear06Porton();
+                            break;
+                        case Taxeando19Porton:
+                            this.taxear19Porton();
+                            break;
+                        case Taxeando24Porton:
+                            this.taxear24Porton();
+                            break;
+                        case TaxeandoPorton01:
+                            break;
+                        case TaxeandoPorton06:
+                            break;
+                        case TaxeandoPorton19:
+                            break;
+                        case TaxeandoPorton24:
+                            break;
+                        case EnPorton:
+                            Random random = new Random();
+                            //continuar = true;
+                            //Thread.sleep(random.nextLong(20000));
+                            //this.wait(random.nextLong(20000));
+/*
+                            synchronized (this) {
+                                try {
+                                    //this.wait(5000);
+                                    Thread.sleep(5000);
+                                } catch (Exception ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }*/
+                            //continuar = true;
+                            this.taxearPistaActiva();
+                            break;
 
-        try {
-            //System.out.println("Prioridad " + avion.nombre + " :" + avion.prioridad);
+                    }
 
-            switch (this.estado) {
-                case Esperando:
-                    //aterrizar el avion y cambiar estado a aterrizando
-                    //this.aterrizar();
-                    aeropuerto.pedirPermisoAterrizar(this);
-                    break;
-                case Aterrizando01:
-                    break;
-                case Aterrizando06:
-                    break;
-                case Aterrizando19:
-                    break;
-                case Aterrizando24:
-                    break;
-                case Despegando01:
-                    break;
-                case Despegando06:
-                    break;
-                case Despegando19:
-                    break;
-                case Despegando24:
-                    break;
-                case Taxeando01Porton:
-                    break;
-                case Taxeando06Porton:
-                    break;
-                case Taxeando19Porton:
-                    break;
-                case Taxeando24Porton:
-                    break;
-                case TaxeandoPorton01:
-                    break;
-                case TaxeandoPorton06:
-                    break;
-                case TaxeandoPorton19:
-                    break;
-                case TaxeandoPorton24:
-                    break;
-                case EnPorton:
-                    break;
+                }
+            } catch (Exception ex) {
+                System.out.println(ex);
             }
 
-        } catch (Exception e) {
-            System.out.println(e);
-        }
+        });
+        timer.start();
+
+
     }
 
     public void move() {
@@ -327,11 +375,13 @@ public class Avion implements Comparable<Avion>, Runnable {
     }
 
 
-    public void nextPosition() {
+    public void nextPosition() throws InterruptedException {
         //poner la maquina de estados aca?
 
         if (!moving) {
+            System.out.println("Avion: " + this.nombre + " Estado: " + this.estado + " Posicion: " + this.posicion);
             switch (this.estado) {
+                case Aterrizar:
                 case Esperando:
                     //aterrizar el avion y cambiar estado a aterrizando
                     this.siguientePosicion = posiciones.esperar.get(posiciones.posicionEsperar);
@@ -340,6 +390,9 @@ public class Avion implements Comparable<Avion>, Runnable {
                     if ((this.x == this.posiciones.esperar.get(2).x && this.y == this.posiciones.esperar.get(2).y) && tienePermisoUsarPista) {
                         //cambiar de estado a aterrizando por la pista activa del momento
                         //pero llamar a los semaforos y eso en la otra maquina de estados
+
+                        posicion = -1;
+                        continuar = true;
                         if (this.numeroPistaUsada == "01") {
                             this.estado = Estados.Aterrizando01;
                         } else if (this.numeroPistaUsada == "06") {
@@ -349,7 +402,6 @@ public class Avion implements Comparable<Avion>, Runnable {
                         } else {
                             this.estado = Estados.Aterrizando24;
                         }
-                        posicion = -1;
                         break;
                     }
 
@@ -359,7 +411,15 @@ public class Avion implements Comparable<Avion>, Runnable {
 
                     if (this.x == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).x && this.y == posiciones.aterrizar01.get(posiciones.aterrizar01.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 01 a porton
-                        this.taxear01Porton();
+                        //this.taxear01Porton();
+                        synchronized (this.recorrer) {
+                            try {
+                                this.recorrer.notify();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        continuar = true;
                         this.estado = Estados.Taxeando01Porton;
                         posicion = -1;
                         break;
@@ -372,7 +432,15 @@ public class Avion implements Comparable<Avion>, Runnable {
 
                     if (this.x == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).x && this.y == posiciones.aterrizar06.get(posiciones.aterrizar06.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 06 a porton
-                        this.taxear06Porton();
+                        //this.taxear06Porton();
+                        synchronized (this.recorrer) {
+                            try {
+                                this.recorrer.notify();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        continuar = true;
                         this.estado = Estados.Taxeando06Porton;
                         posicion = -1;
                         break;
@@ -383,9 +451,18 @@ public class Avion implements Comparable<Avion>, Runnable {
                     posiciones.posicionEsperar = 0;
                     if (this.x == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).x && this.y == posiciones.aterrizar19.get(posiciones.aterrizar19.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 19 a porton
-                        this.taxear19Porton();
+                        //this.taxear19Porton();
+
+                        continuar = true;
                         this.estado = Estados.Taxeando19Porton;
                         posicion = -1;
+                        synchronized (this.recorrer) {
+                            try {
+                                this.recorrer.notify();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                         break;
                     }
                     this.siguientePosicion = posiciones.aterrizar19.get(posicion);
@@ -395,7 +472,16 @@ public class Avion implements Comparable<Avion>, Runnable {
 
                     if (this.x == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).x && this.y == posiciones.aterrizar24.get(posiciones.aterrizar24.size() - 1).y) {
                         //ya salio de la pista, lo cambio de estado a taxeando de 24 a porton
-                        this.taxear24Porton();
+                        //this.taxear24Porton();
+
+                        synchronized (this.recorrer) {
+                            try {
+                                this.recorrer.notify();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        continuar = true;
                         this.estado = Estados.Taxeando24Porton;
                         posicion = -1;
                         break;
@@ -466,6 +552,7 @@ public class Avion implements Comparable<Avion>, Runnable {
 
                     if (this.x == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).x && this.y == posiciones.taxear19porton.get(posiciones.taxear19porton.size() - 1).y) {
                         //ya llego al porton, lo cambio de estado a en porton
+                        continuar = true;
                         this.estado = Estados.EnPorton;
                         posicion = -1;
                         break;
@@ -524,18 +611,51 @@ public class Avion implements Comparable<Avion>, Runnable {
                     break;
                 case EnPorton:
                     //esperar algunos segundos random, y despues ver cual es la pista activa y taxear a ella
+                    Random random = new Random();
+                    //Thread.sleep(random.nextLong(20000));
+                    //this.wait(random.nextLong(20000));
+                    /*
+                    synchronized (this) {
+                        try {
+                            this.wait(random.nextLong(20000));
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
                     this.taxearPistaActiva();
+                    */
+                    //continuar = true;
                     break;
             }
+
             moveTo(this.siguientePosicion.x, this.siguientePosicion.y);
             if (!this.siguientePosicion.necesitaPermiso) {
                 posicion++;
+            } else {
+                System.out.println("NO tiene permiso");
             }
+            this.panel.cambiarEstado(this.estado.toString());
         }
     }
 
     public void taxearPistaActiva() {
-
+        String pistaActiva = aeropuerto.getNumeroPistaActiva();
+        continuar = true;
+        if (pistaActiva == "01") {
+            posicion = 0;
+            this.estado = Estados.TaxeandoPorton01;
+        } else if (pistaActiva == "06") {
+            posicion = 0;
+            this.estado = Estados.TaxeandoPorton06;
+        } else if (pistaActiva == "19") {
+            posicion = 0;
+            this.estado = Estados.TaxeandoPorton19;
+        } else {
+            //pista 24
+            posicion = 0;
+            this.estado = Estados.TaxeandoPorton24;
+        }
     }
 
     private double calcRotationAngleInDegrees(Posicion centerPt, Posicion targetPt) {
@@ -569,10 +689,15 @@ public class Avion implements Comparable<Avion>, Runnable {
 
 
     public enum Estados {
-        Despegando01, Despegando06, Despegando19, Despegando24, Esperando, Aterrizando01, Aterrizando06, Aterrizando19, Aterrizando24, Taxeando01Porton, Taxeando06Porton, Taxeando19Porton, Taxeando24Porton, TaxeandoPorton01, TaxeandoPorton06, TaxeandoPorton19, TaxeandoPorton24,
-
+        Despegando01, Despegando06, Despegando19, Despegando24,
+        Esperando,
+        Aterrizando01, Aterrizando06, Aterrizando19, Aterrizando24,
+        Taxeando01Porton, Taxeando06Porton, Taxeando19Porton, Taxeando24Porton,
+        TaxeandoPorton01, TaxeandoPorton06, TaxeandoPorton19, TaxeandoPorton24,
+        Estacionando01, Estacionando06, Estacionando19, Estacionando24,
+        Estacionado,
+        Aterrizar,
         EnPorton
-
     }
 }
 

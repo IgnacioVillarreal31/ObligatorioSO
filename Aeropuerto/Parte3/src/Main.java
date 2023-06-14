@@ -19,6 +19,7 @@ public class Main {
         }
 
         Aeropuerto aero = new Aeropuerto();
+        aero.setPistaActiva("19");
         Avion a1 = new Avion(aero, 1, "A1", 10, Avion.Estados.Esperando, 15, 15, avion);
         Avion a2 = new Avion(aero, 1, "A2", 10, Avion.Estados.Esperando, 15, 200, avion);
         Avion a3 = new Avion(aero, 1, "A3", 10, Avion.Estados.Esperando, 15, 500, avion);
