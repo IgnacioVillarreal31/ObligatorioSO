@@ -107,8 +107,13 @@ public class Avion extends Thread implements Comparable<Avion>, Runnable {
         Object[] pista = aeropuerto.getPistaActiva();
         pistaUsada = (Pista) pista[0];
         //pistaUsada.usar.acquire();
-        aeropuerto.pista0119.usar.acquire();
-        aeropuerto.pista0624.usar.acquire();
+        //aeropuerto.pista0119.usar.acquire();
+        //aeropuerto.pista0624.usar.acquire();
+        while (aeropuerto.getPistaOcupada()) {
+            this.wait();
+        }
+        aeropuerto.setPistaOcupada(true);
+
         this.tienePermisoUsarPista = true;
         //ver la pista activa
         this.numeroPistaUsada = pista[1].toString();
@@ -163,8 +168,10 @@ public class Avion extends Thread implements Comparable<Avion>, Runnable {
 
     public void taxear19Porton() {
         //salgo de la pista
-        aeropuerto.pista0624.usar.release();
-        aeropuerto.pista0119.usar.release();
+        //aeropuerto.pista0624.usar.release();
+        //aeropuerto.pista0119.usar.release();
+        aeropuerto.setPistaOcupada(false);
+        this.notifyAll();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 19.");
         this.tienePermisoUsarPista = false;
     }

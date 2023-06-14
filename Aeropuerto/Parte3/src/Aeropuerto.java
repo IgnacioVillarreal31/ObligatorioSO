@@ -17,6 +17,8 @@ public class Aeropuerto implements Runnable {
 
     protected String numeroPistaActiva;
 
+    private boolean pistaOcupada = false;
+
     public Aeropuerto() {
         //fair le da el lock al thread con mayor tiempo (Funciona de forma FIFO)
         pista0119 = new Pista(new Semaphore(1, true), "01-19");
@@ -25,6 +27,14 @@ public class Aeropuerto implements Runnable {
         aterrizar = new PriorityBlockingQueue<>(15, Avion::compareTo);
         aviones = new HashMap<String, Avion>();
         this.elegirPistaActiva();
+    }
+
+    public synchronized boolean getPistaOcupada() {
+        return this.pistaOcupada;
+    }
+
+    public synchronized void setPistaOcupada(boolean ocupado) {
+        this.pistaOcupada = ocupado;
     }
 
     public void agregar(Avion avion) {
@@ -103,6 +113,7 @@ public class Aeropuerto implements Runnable {
         for (Avion avion : aviones.values()) {
             avion.setRecorrer(r);
             Thread t1 = new Thread(avion);
+            t1.setName(avion.nombre);
             t1.setPriority(Thread.NORM_PRIORITY);
             t1.start();
         }
@@ -110,12 +121,14 @@ public class Aeropuerto implements Runnable {
         //parte grafica
         Graficos graficos = new Graficos(this);
         Thread g = new Thread(graficos);
+        g.setName("Graficos");
         g.setPriority(Thread.NORM_PRIORITY);
 
 
         //recorrer colas de prioridad y ver quienes quieren aterrizar y eso
         Thread recorrer = new Thread(r);
         recorrer.setPriority(Thread.NORM_PRIORITY);
+        recorrer.setName("Recorrer");
         g.start();
         recorrer.start();
 
