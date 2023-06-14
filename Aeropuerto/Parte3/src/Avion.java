@@ -107,12 +107,14 @@ public class Avion extends Thread implements Comparable<Avion>, Runnable {
         Object[] pista = aeropuerto.getPistaActiva();
         pistaUsada = (Pista) pista[0];
         //pistaUsada.usar.acquire();
-        //aeropuerto.pista0119.usar.acquire();
-        //aeropuerto.pista0624.usar.acquire();
+        aeropuerto.pista0119.usar.acquire();
+        aeropuerto.pista0624.usar.acquire();
+/*
         while (aeropuerto.getPistaOcupada()) {
             this.wait();
         }
         aeropuerto.setPistaOcupada(true);
+*/
 
         this.tienePermisoUsarPista = true;
         //ver la pista activa
@@ -168,10 +170,11 @@ public class Avion extends Thread implements Comparable<Avion>, Runnable {
 
     public void taxear19Porton() {
         //salgo de la pista
-        //aeropuerto.pista0624.usar.release();
-        //aeropuerto.pista0119.usar.release();
-        aeropuerto.setPistaOcupada(false);
-        this.notifyAll();
+        aeropuerto.pista0624.usar.release();
+        aeropuerto.pista0119.usar.release();
+        //aeropuerto.setPistaOcupada(false);
+        //this.notifyAll();
+        this.recorrer.semaforo.release();
         System.out.println(this.nombre + " aterrizó y devolvio el uso de la pista 19.");
         this.tienePermisoUsarPista = false;
     }
@@ -463,13 +466,15 @@ public class Avion extends Thread implements Comparable<Avion>, Runnable {
                         continuar = true;
                         this.estado = Estados.Taxeando19Porton;
                         posicion = -1;
+/*
                         synchronized (this.recorrer) {
                             try {
                                 this.recorrer.notify();
+                                //this.recorrer.lock.unlock();
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
-                        }
+                        }*/
                         break;
                     }
                     this.siguientePosicion = posiciones.aterrizar19.get(posicion);
