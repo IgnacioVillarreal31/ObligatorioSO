@@ -10,7 +10,7 @@ public class Aeropuerto implements Runnable {
     protected Pista pista0119;
     protected Pista pista0624;
     protected Pista pistaActiva;
-    protected final Semaphore permisoUsarPista = new Semaphore(15);
+    protected final Semaphore permisoUsarPista = new Semaphore(1);
     public PriorityBlockingQueue<Avion> aterrizar;
     protected HashMap<String, Avion> aviones;
     protected int direccionViento;
@@ -73,6 +73,7 @@ public class Aeropuerto implements Runnable {
         } else if (pista.equals("01") || pista.equals("19")) {
             this.pistaActiva = pista0119;
         }
+        this.setNumeroPistaActiva(pista);
     }
 
     public synchronized String getNumeroPistaActiva() {
@@ -98,7 +99,9 @@ public class Aeropuerto implements Runnable {
 
     public void run() {
         // inicializar todos los aviones
+        Recorrer r = new Recorrer(this);
         for (Avion avion : aviones.values()) {
+            avion.setRecorrer(r);
             Thread t1 = new Thread(avion);
             t1.setPriority(Thread.NORM_PRIORITY);
             t1.start();
@@ -108,13 +111,13 @@ public class Aeropuerto implements Runnable {
         Graficos graficos = new Graficos(this);
         Thread g = new Thread(graficos);
         g.setPriority(Thread.NORM_PRIORITY);
-        g.start();
+
 
         //recorrer colas de prioridad y ver quienes quieren aterrizar y eso
-        Thread recorrer = new Thread(new Recorrer(this));
+        Thread recorrer = new Thread(r);
         recorrer.setPriority(Thread.NORM_PRIORITY);
+        g.start();
         recorrer.start();
-
 
 /*
         while (true) {

@@ -16,7 +16,7 @@ public class Graficos extends JFrame implements Runnable {
     public JTable tabla;
     private static final int WIDTH = 1300;
     private static final int HEIGHT = 700;
-    private static final int DELAY = 40;
+    public static final int DELAY = 40;
     public final Aeropuerto aeropuerto;
 
     //posiciones de los aviones en la tabla
@@ -136,7 +136,11 @@ public class Graficos extends JFrame implements Runnable {
             for (Avion avion : aeropuerto.aviones.values()) {
                 tabla.setValueAt(avion.estado.toString(), this.filasTabla.get(avion.nombre), 1);
                 tabla.setValueAt(String.valueOf(avion.prioridad), this.filasTabla.get(avion.nombre), 2);
-                avion.nextPosition();
+                try {
+                    avion.nextPosition();
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
                 avion.move();
             }
             repaint();
