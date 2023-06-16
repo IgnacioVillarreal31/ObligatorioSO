@@ -215,7 +215,7 @@ public class Avion implements Comparable<Avion> {
     public synchronized void reiniciar() {
         //luego de aterrizar que cambie su prioridad a uno y su timestamp
         Avion avion = this;
-        //avion.setTimestamp(System.nanoTime());
+        avion.setTimestamp(System.nanoTime());
         avion.setTienePermisoUsarPista(false);
         avion.prioridad = 1;
     }

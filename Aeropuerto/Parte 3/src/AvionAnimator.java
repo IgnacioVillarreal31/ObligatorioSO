@@ -7,7 +7,7 @@ public class AvionAnimator implements Runnable {
     private final int maxX, maxY;
     private final Random rnd;
     private boolean moveRight = true, moveDown = true;
-    private static final int STEP = 1, WAIT = 40;
+    private static final int STEP = 1, WAIT = 10;
 
     private int posicion = 0;
     private Semaphore recorrer;
@@ -75,6 +75,8 @@ public class AvionAnimator implements Runnable {
 */
 
         boolean continuar = false;
+        boolean cruzar = false;
+
         while (true) {
             if (avion.getMoving()) {
                 if (avion.getX() < avion.getTargetX()) {
@@ -227,9 +229,10 @@ public class AvionAnimator implements Runnable {
                         if (avion.getX() == avion.posiciones.despegar01.get(avion.posiciones.despegar01.size() - 1).x && avion.getY() == avion.posiciones.despegar01.get(avion.posiciones.despegar01.size() - 1).y) {
                             //ya salio de la pista, lo cambio de estado a esperando
                             //ball.estado = Estados.Esperando;
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 01.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
+                            recorrer.release();
                             avion.setEstado(Avion.Estados.Esperando);
                             posicion = -1;
                             break;
@@ -241,9 +244,10 @@ public class AvionAnimator implements Runnable {
                         if (avion.getX() == avion.posiciones.despegar06.get(avion.posiciones.despegar06.size() - 1).x && avion.getY() == avion.posiciones.despegar06.get(avion.posiciones.despegar06.size() - 1).y) {
                             //ya salio de la pista, lo cambio de estado a esperando
                             //ball.estado = Estados.Esperando;
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 06.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
+                            recorrer.release();
                             avion.setEstado(Avion.Estados.Esperando);
                             posicion = -1;
                             break;
@@ -253,9 +257,10 @@ public class AvionAnimator implements Runnable {
                     case Despegando19:
                         if (avion.getX() == avion.posiciones.despegar19.get(avion.posiciones.despegar19.size() - 1).x && avion.getY() == avion.posiciones.despegar19.get(avion.posiciones.despegar19.size() - 1).y) {
                             //ya salio de la pista, lo cambio de estado a esperando
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 19.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
+                            recorrer.release();
                             avion.setEstado(Avion.Estados.Esperando);
                             posicion = -1;
                             break;
@@ -267,9 +272,10 @@ public class AvionAnimator implements Runnable {
                         if (avion.getX() == avion.posiciones.despegar24.get(avion.posiciones.despegar24.size() - 1).x && avion.getY() == avion.posiciones.despegar24.get(avion.posiciones.despegar24.size() - 1).y) {
                             //ya salio de la pista, lo cambio de estado a esperando
                             //ball.estado = Estados.Esperando;
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 24.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
+                            recorrer.release();
                             avion.setEstado(Avion.Estados.Esperando);
                             posicion = -1;
                             break;
@@ -279,12 +285,28 @@ public class AvionAnimator implements Runnable {
                     case Taxeando01Porton:
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 01.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
                             this.recorrer.release();
                         }
+
+                        if (cruzar) {
+                            avion.getAeropuerto().permisoUsarPista.release();
+                            this.recorrer.release();
+                            cruzar = false;
+                        }
+                        if (avion.getSiguientePosicion().necesitaPermiso) {
+                            try {
+                                avion.getAeropuerto().permisoUsarPista.acquire();
+                                cruzar = true;
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+
                         if (avion.getX() == avion.posiciones.taxear01porton.get(avion.posiciones.taxear01porton.size() - 1).x && avion.getY() == avion.posiciones.taxear01porton.get(avion.posiciones.taxear01porton.size() - 1).y) {
                             //ya llego al porton, lo cambio de estado a en porton
                             //ball.estado = Estados.EnPorton;
@@ -297,8 +319,8 @@ public class AvionAnimator implements Runnable {
                     case Taxeando06Porton:
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 06.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
                             this.recorrer.release();
@@ -315,8 +337,8 @@ public class AvionAnimator implements Runnable {
                     case Taxeando19Porton:
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 19.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
                             this.recorrer.release();
@@ -334,12 +356,29 @@ public class AvionAnimator implements Runnable {
                     case Taxeando24Porton:
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
-                            avion.getAeropuerto().permisoUsarPista.release();
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 24.");
+                            avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
                             this.recorrer.release();
                         }
+
+
+                        if (cruzar) {
+                            avion.getAeropuerto().permisoUsarPista.release();
+                            this.recorrer.release();
+                            cruzar = false;
+                        }
+                        if (avion.getSiguientePosicion().necesitaPermiso) {
+                            try {
+                                avion.getAeropuerto().permisoUsarPista.acquire();
+                                cruzar = true;
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+
                         if (avion.getX() == avion.posiciones.taxear24porton.get(avion.posiciones.taxear24porton.size() - 1).x && avion.getY() == avion.posiciones.taxear24porton.get(avion.posiciones.taxear24porton.size() - 1).y) {
                             //ya llego al porton, lo cambio de estado a en porton
                             //ball.estado = Estados.EnPorton;
@@ -369,6 +408,20 @@ public class AvionAnimator implements Runnable {
                         break;
                     case TaxeandoPorton06:
 
+                        if (cruzar) {
+                            avion.getAeropuerto().permisoUsarPista.release();
+                            this.recorrer.release();
+                            cruzar = false;
+                        }
+                        if (avion.getSiguientePosicion().necesitaPermiso) {
+                            try {
+                                avion.getAeropuerto().permisoUsarPista.acquire();
+                                cruzar = true;
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
                         if (avion.getX() == avion.posiciones.taxearporton06.get(avion.posiciones.taxearporton06.size() - 1).x && avion.getY() == avion.posiciones.taxearporton06.get(avion.posiciones.taxearporton06.size() - 1).y) {
                             //ya llego a la pista, lo cambio a despegando por la pista 06
                             //ball.estado = Estados.Despegando06;
@@ -386,6 +439,20 @@ public class AvionAnimator implements Runnable {
                         avion.setSiguientePosicion(avion.posiciones.taxearporton06.get(posicion));
                         break;
                     case TaxeandoPorton19:
+
+                        if (cruzar) {
+                            avion.getAeropuerto().permisoUsarPista.release();
+                            this.recorrer.release();
+                            cruzar = false;
+                        }
+                        if (avion.getSiguientePosicion().necesitaPermiso) {
+                            try {
+                                avion.getAeropuerto().permisoUsarPista.acquire();
+                                cruzar = true;
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
 
                         if (avion.getX() == avion.posiciones.taxearporton19.get(avion.posiciones.taxearporton19.size() - 1).x && avion.getY() == avion.posiciones.taxearporton19.get(avion.posiciones.taxearporton19.size() - 1).y) {
                             //ya llego a la pista, lo cambio a despegando por la pista 19

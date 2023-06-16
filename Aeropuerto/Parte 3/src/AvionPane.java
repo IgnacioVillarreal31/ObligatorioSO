@@ -122,6 +122,8 @@ public class AvionPane extends JPanel implements Observer {
             b.getPanel().setLocation(b.getX(), b.getY());
         }
         g.drawImage(image, 20, 30, null);
+        //dibuja los caminos por pantalla
+    /*
         for (Avion b : model.getBalls()) {
             HashMap pos = b.posiciones.mapa;
             pos.forEach((key, value) -> {
@@ -133,6 +135,7 @@ public class AvionPane extends JPanel implements Observer {
             });
             break;
         }
+    */
     }
 
     @Override

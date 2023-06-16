@@ -28,7 +28,9 @@ public class Recorrer extends Thread implements Runnable {
                 try {
                     semaforo.acquire();
                     Avion avion = aeropuerto.getAvionesAterrizar().poll();
-                    avion.setEstado(Avion.Estados.Aterrizar);
+                    if (avion != null) {
+                        avion.setEstado(Avion.Estados.Aterrizar);
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
