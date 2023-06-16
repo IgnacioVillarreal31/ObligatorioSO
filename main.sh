@@ -7,7 +7,10 @@ semana=`date -d "$ayer" +%W`
 
 mkdir $ruta/"`date +%W`" 2>/dev/null
 mkdir $ruta/"`date +%W`/`date +%Y-%m-%d`" 2>/dev/null
-bash $ruta/inicioEnFecha.sh `date -d $ayer +%m` `date -d $ayer +%d`
+
+touch "$ruta/`date +%W`/`date +%Y-%m-%d`/inicioSesion.txt"
+bash $ruta/inicioEnFecha.sh `date -d "$ayer" +%b` `date -d "$ayer" +%d` "/var/log/secure" > "$ruta/`date +%W`/`date +%Y-%m-%d`/inicioSesion.txt"
+
 
 for user in `bash $ruta/usuariosValidos.sh`
 do
