@@ -13,9 +13,7 @@ public class Posiciones {
     public ArrayList<Posicion> despegar06;
     public ArrayList<Posicion> despegar19;
     public ArrayList<Posicion> despegar24;
-
     public ArrayList<Posicion> esperar;
-
     public ArrayList<Posicion> taxear01porton;
     public ArrayList<Posicion> taxear06porton;
     public ArrayList<Posicion> taxear19porton;

@@ -8,8 +8,8 @@ public class Aeropuerto extends Thread implements Runnable {
     protected Pista pista0119;
     protected Pista pista0624;
     protected Pista pistaActiva;
-    protected final Semaphore permisoUsarPista = new Semaphore(1);
-    public PriorityBlockingQueue<Avion> aterrizar;
+    protected final Semaphore permisoUsarPista = new Semaphore(1, true);
+    private PriorityBlockingQueue<Avion> aterrizar;
     protected HashMap<String, Avion> aviones;
     protected int direccionViento;
 
@@ -17,14 +17,17 @@ public class Aeropuerto extends Thread implements Runnable {
 
     private boolean pistaOcupada = false;
 
+    private int contador = 0;
     public ReentrantLock lock;
 
     public ThreadGroup tg;
 
     public HashMap<Comparable, Thread> threads;
 
+    private Semaphore recorrer;
 
-    public Aeropuerto() {
+
+    public Aeropuerto(Semaphore recorrer) {
         //fair le da el lock al thread con mayor tiempo (Funciona de forma FIFO)
         pista0119 = new Pista(new Semaphore(1, true), "01-19");
         pista0624 = new Pista(new Semaphore(1, true), "06-24");
@@ -35,9 +38,16 @@ public class Aeropuerto extends Thread implements Runnable {
         lock = new ReentrantLock();
         tg = new ThreadGroup("Grupo Aviones");
         threads = new HashMap<Comparable, Thread>();
+        this.recorrer = recorrer;
     }
 
+    public synchronized PriorityBlockingQueue<Avion> getAvionesAterrizar() {
+        return this.aterrizar;
+    }
 
+    public synchronized void cambiarDireccionVientoRandom() {
+        this.setDireccionViento(ThreadLocalRandom.current().nextInt(359));
+    }
 
     public synchronized boolean getPistaOcupada() {
         return this.pistaOcupada;
@@ -51,7 +61,7 @@ public class Aeropuerto extends Thread implements Runnable {
         this.aviones.put(avion.nombre, avion);
     }
 
-    private void elegirPistaActiva() {
+    public synchronized void elegirPistaActiva() {
         int direccionViento = this.getDireccionViento();
 
         if (direccionViento >= 30 && direccionViento <= 119) {
@@ -108,12 +118,20 @@ public class Aeropuerto extends Thread implements Runnable {
         this.direccionViento = direccion;
     }
 
-    public void pedirPermisoAterrizar(Avion avion) {
 
-        if (!aterrizar.contains(avion)) {
-            aterrizar.add(avion);
+    public synchronized void pedirPermisoAterrizar(Avion avion) {
+
+        if (!getAvionesAterrizar().contains(avion)) {
+            getAvionesAterrizar().add(avion);
+        } else {
+            if (getAvionesAterrizar().size() == Proyecto.numAviones) {
+                this.recorrer.release();
+            }
         }
-
+/*
+        if (this.recorrer.availablePermits() == 0) {
+            this.recorrer.release();
+        }*/
     }
 
 

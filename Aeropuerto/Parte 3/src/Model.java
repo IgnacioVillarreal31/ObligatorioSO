@@ -6,7 +6,10 @@ public class Model {
     private final ArrayList<Avion> avions;
     private final int width, height;
 
-    Model() {
+    public Aeropuerto aeropuerto;
+
+    Model(Aeropuerto aeropuerto) {
+        this.aeropuerto = aeropuerto;
         avions = new ArrayList<>();
         width = 1300;
         height = 700;
