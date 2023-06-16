@@ -24,15 +24,14 @@ public class Recorrer extends Thread implements Runnable {
 
         while (true) {
             //recorrer las tres listas de prioridad, una para aterrizar, otra para usar la pista1 y otra para usar la pista2
-            while (!aeropuerto.aterrizar.isEmpty()) {
+            while (!aeropuerto.getAvionesAterrizar().isEmpty()) {
                 try {
                     semaforo.acquire();
+                    Avion avion = aeropuerto.getAvionesAterrizar().poll();
+                    avion.setEstado(Avion.Estados.Aterrizar);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                Avion avion = aeropuerto.aterrizar.poll();
-                avion.setEstado(Avion.Estados.Aterrizar);
-
 
 /*
                 synchronized (this) {

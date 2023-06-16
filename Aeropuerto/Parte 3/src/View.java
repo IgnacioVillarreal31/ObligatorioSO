@@ -1,7 +1,9 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class View {
     private final AvionPane avionPane;
@@ -31,10 +33,24 @@ public class View {
         }*/
 
         frame.add(avionPane);
+        String[] columnas = {"ID", "ESTADO", "PRIORIDAD"};
+        String[][] filas = new String[model.getBalls().size()][3];
+        int i = 0;
+        DefaultTableModel m = (DefaultTableModel) avionPane.tabla.getModel();
+        m.addColumn(columnas[0].toString());
+        m.addColumn(columnas[1].toString());
+        m.addColumn(columnas[2].toString());
+        avionPane.filasTabla = new HashMap<String, Integer>();
         for (Avion b : model.getBalls()) {
+            //agrega los aviones a la pantalla
+            avionPane.filasTabla.put(b.nombre, i);
+            i++;
             avionPane.add(b.getPanel());
+            m.addRow(new Object[]{b.nombre, b.getEstado().toString(), String.valueOf(b.getPrioridad())});
         }
+
         //frame.pack();
+
         frame.setSize(model.getWidth() + 15, model.getHeight() + 15);
         frame.setResizable(false);
         frame.setVisible(true);
@@ -43,4 +59,5 @@ public class View {
     Observer getObserver() {
         return avionPane;
     }
+
 }

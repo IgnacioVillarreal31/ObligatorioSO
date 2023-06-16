@@ -20,7 +20,7 @@ public class Avion implements Comparable<Avion> {
 
     public String nombre;
 
-    public Estados estado;
+    private Estados estado;
 
     private Posicion siguientePosicion;
 
@@ -30,9 +30,9 @@ public class Avion implements Comparable<Avion> {
 
     private boolean tienePermisoAterrizar = false;
 
-    protected int prioridad;
+    private int prioridad;
 
-    protected long timestamp;
+    private long timestamp;
 
     private Aeropuerto aeropuerto;
 
@@ -60,6 +60,14 @@ public class Avion implements Comparable<Avion> {
         this.panel = new Panel(this.nombre, this.estado.toString(), avion);
         Random rnd = new Random();
         color = new Color(rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
+    }
+
+    public synchronized void setPrioridad(int prioridad) {
+        this.prioridad = prioridad;
+    }
+
+    public synchronized int getPrioridad() {
+        return this.prioridad;
     }
 
     public synchronized void setPistaUsada(Pista pista) {
@@ -165,14 +173,22 @@ public class Avion implements Comparable<Avion> {
     @Override
     public int compareTo(Avion avion) {
 
-        if (avion.prioridad > this.prioridad) return -1;
-        else if (avion.prioridad < this.prioridad) return 1;
+        if (avion.getPrioridad() > this.getPrioridad()) return -1;
+        else if (avion.getPrioridad() < this.getPrioridad()) return 1;
         else {
             //Si tiene la misma prioridad, que ponga primero el que fue creado antes
-            if (avion.timestamp < this.timestamp) return 1;
+            if (avion.getTimestamp() < this.getTimestamp()) return 1;
             return -1;
 
         }
+    }
+
+    public synchronized void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public synchronized long getTimestamp() {
+        return this.timestamp;
     }
 
     public synchronized void setNumeroPistaUsada(String pista) {
@@ -181,6 +197,27 @@ public class Avion implements Comparable<Avion> {
 
     public synchronized String getNumeroPistaUsada() {
         return this.numeroPistaUsada;
+    }
+
+    public synchronized void pedirPrioridadAterrizar() {
+        if ((this.estado == Estados.Esperando) && this.prioridad != 0) {
+            //que pida prioridad para aterrizar solo si esta esperando, si ya va a aterrizar, no darle permiso
+            Avion avion = this;
+            aeropuerto.getAvionesAterrizar().remove(this);
+            avion.estado = Estados.Esperando;
+            avion.setTimestamp(System.nanoTime());
+            avion.prioridad = 0;
+            aeropuerto.getAvionesAterrizar().offer(avion);
+            System.out.println(this.nombre + " pidio prioridad para aterrizar.");
+        }
+    }
+
+    public synchronized void reiniciar() {
+        //luego de aterrizar que cambie su prioridad a uno y su timestamp
+        Avion avion = this;
+        //avion.setTimestamp(System.nanoTime());
+        avion.setTienePermisoUsarPista(false);
+        avion.prioridad = 1;
     }
 
     public enum Estados {
