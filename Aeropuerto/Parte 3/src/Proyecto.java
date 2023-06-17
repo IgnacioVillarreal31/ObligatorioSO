@@ -5,9 +5,9 @@ public class Proyecto {
     public static int numAviones = 5;
 
     public static void main(String[] args) {
+        ManejadorArchivosGenerico.lineas = new StringBuffer();
         Semaphore rec = new Semaphore(1); //semaforo de recorrer para que solo permita que uno aterrice por vez
         Aeropuerto aeropuerto = new Aeropuerto(rec);
-        aeropuerto.setPistaActiva("24");
         Model model = new Model(aeropuerto);
         View view = new View(model);
         for (int i = 0; i < numAviones; i++) {

@@ -8,7 +8,7 @@ public class AvionAnimator implements Runnable {
     private final Random rnd;
     private boolean moveRight = true, moveDown = true;
     private static final int STEP = 1, WAIT = 10;
-
+    public static boolean parador = true;
     private int posicion = 0;
     private Semaphore recorrer;
 
@@ -77,7 +77,7 @@ public class AvionAnimator implements Runnable {
         boolean continuar = false;
         boolean cruzar = false;
 
-        while (true) {
+        while (parador) {
             if (avion.getMoving()) {
                 if (avion.getX() < avion.getTargetX()) {
                     avion.setX(avion.getX() + 1);
@@ -230,6 +230,7 @@ public class AvionAnimator implements Runnable {
                             //ya salio de la pista, lo cambio de estado a esperando
                             //ball.estado = Estados.Esperando;
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 01.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " despegó y devolvio el uso de la pista 01.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
                             recorrer.release();
@@ -245,6 +246,7 @@ public class AvionAnimator implements Runnable {
                             //ya salio de la pista, lo cambio de estado a esperando
                             //ball.estado = Estados.Esperando;
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 06.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " despegó y devolvio el uso de la pista 06.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
                             recorrer.release();
@@ -258,6 +260,7 @@ public class AvionAnimator implements Runnable {
                         if (avion.getX() == avion.posiciones.despegar19.get(avion.posiciones.despegar19.size() - 1).x && avion.getY() == avion.posiciones.despegar19.get(avion.posiciones.despegar19.size() - 1).y) {
                             //ya salio de la pista, lo cambio de estado a esperando
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 19.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " despegó y devolvio el uso de la pista 19.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
                             recorrer.release();
@@ -273,6 +276,7 @@ public class AvionAnimator implements Runnable {
                             //ya salio de la pista, lo cambio de estado a esperando
                             //ball.estado = Estados.Esperando;
                             System.out.println(avion.nombre + " despegó y devolvio el uso de la pista 24.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " despegó y devolvio el uso de la pista 24.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.reiniciar();
                             recorrer.release();
@@ -286,6 +290,7 @@ public class AvionAnimator implements Runnable {
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 01.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " aterrizó y devolvio el uso de la pista 01.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
@@ -320,6 +325,7 @@ public class AvionAnimator implements Runnable {
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 06.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " aterrizó y devolvio el uso de la pista 06.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
@@ -338,6 +344,7 @@ public class AvionAnimator implements Runnable {
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 19.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " aterrizó y devolvio el uso de la pista 19.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
@@ -357,6 +364,7 @@ public class AvionAnimator implements Runnable {
                         if (avion.getTienePermisoUsarPista()) {
                             //devolver uso de la pista y de recorrer
                             System.out.println(avion.nombre + " aterrizó y devolvio el uso de la pista 24.");
+                            ManejadorArchivosGenerico.lineas.append(avion.nombre + " aterrizó y devolvio el uso de la pista 24.");
                             avion.getAeropuerto().permisoUsarPista.release();
                             avion.setTienePermisoUsarPista(false);
                             avion.reiniciar();
@@ -396,6 +404,7 @@ public class AvionAnimator implements Runnable {
                             try {
                                 pedirPermisoParaUsarPista();
                                 System.out.println(avion.nombre + " va a usar la pista 01 para despegar.");
+                                ManejadorArchivosGenerico.lineas.append(avion.nombre + " va a usar la pista 01 para despegar.");
                             } catch (InterruptedException e) {
                                 System.out.println("Excepcion en taxeandoPorton01");
                                 throw new RuntimeException(e);
@@ -428,6 +437,7 @@ public class AvionAnimator implements Runnable {
                             try {
                                 pedirPermisoParaUsarPista();
                                 System.out.println(avion.nombre + " va a usar la pista 06 para despegar.");
+                                ManejadorArchivosGenerico.lineas.append(avion.nombre + " va a usar la pista 06 para despegar.");
                             } catch (InterruptedException e) {
                                 System.out.println("Excepcion en taxeandoPorton06");
                                 throw new RuntimeException(e);
@@ -461,6 +471,7 @@ public class AvionAnimator implements Runnable {
                             try {
                                 pedirPermisoParaUsarPista();
                                 System.out.println(avion.nombre + " va a usar la pista 19 para despegar.");
+                                ManejadorArchivosGenerico.lineas.append(avion.nombre + " va a usar la pista 19 para despegar.");
                             } catch (InterruptedException e) {
                                 System.out.println("Excepcion en taxeandoPorton19");
                                 throw new RuntimeException(e);
@@ -479,6 +490,7 @@ public class AvionAnimator implements Runnable {
                             try {
                                 pedirPermisoParaUsarPista();
                                 System.out.println(avion.nombre + " va a usar la pista 24 para despegar.");
+                                ManejadorArchivosGenerico.lineas.append(avion.nombre + " va a usar la pista 24 para despegar.");
                             } catch (InterruptedException e) {
                                 System.out.println("Excepcion en taxeandoPorton24");
                                 throw new RuntimeException(e);
@@ -609,6 +621,7 @@ public class AvionAnimator implements Runnable {
                 //this.aterrizar24();
             }
             System.out.println(avion.nombre + " va a usar la pista " + pista[1].toString() + " para aterrizar.");
+            ManejadorArchivosGenerico.lineas.append(avion.nombre + " va a usar la pista " + pista[1].toString() + " para aterrizar.");
             //actualiza el estado en la parte grafica
         }
     }

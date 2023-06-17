@@ -209,6 +209,7 @@ public class Avion implements Comparable<Avion> {
             avion.prioridad = 0;
             aeropuerto.getAvionesAterrizar().offer(avion);
             System.out.println(this.nombre + " pidio prioridad para aterrizar.");
+            ManejadorArchivosGenerico.lineas.append(this.nombre + " pidio prioridad para aterrizar.");
         }
     }
 

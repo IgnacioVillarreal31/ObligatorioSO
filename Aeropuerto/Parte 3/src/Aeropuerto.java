@@ -123,10 +123,6 @@ public class Aeropuerto extends Thread implements Runnable {
 
         if (!getAvionesAterrizar().contains(avion)) {
             getAvionesAterrizar().add(avion);
-        } else {
-            if (getAvionesAterrizar().size() == Proyecto.numAviones) {
-                //this.recorrer.release();
-            }
         }
 /*
         if (this.recorrer.availablePermits() == 0) {

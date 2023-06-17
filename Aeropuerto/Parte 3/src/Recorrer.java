@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Recorrer extends Thread implements Runnable {
     private Semaphore semaforo;
-
+    public static boolean parador = true;
     private Aeropuerto aeropuerto;
     private final int DELAY = 100;
 
@@ -22,7 +22,7 @@ public class Recorrer extends Thread implements Runnable {
     @Override
     public void run() {
 
-        while (true) {
+        while (parador) {
             //recorrer las tres listas de prioridad, una para aterrizar, otra para usar la pista1 y otra para usar la pista2
             while (!aeropuerto.getAvionesAterrizar().isEmpty()) {
                 try {

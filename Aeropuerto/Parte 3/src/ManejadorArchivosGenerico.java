@@ -1,9 +1,11 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.StringTokenizer;
 
 
 public class ManejadorArchivosGenerico {
+    public static StringBuffer lineas;
     /**
      * @param nombreCompletoArchivo
      * @param listaLineasArchivo    lista con las lineas del archivo
