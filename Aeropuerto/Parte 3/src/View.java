@@ -1,6 +1,7 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,14 +26,13 @@ public class View {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
-/*
-        try {
-            frame.setContentPane(new JLabel(new ImageIcon(ImageIO.read(new File("src/aero.png")))));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+
+        ImageIcon img = new ImageIcon("src/avion.png");
+        frame.setIconImage(img.getImage());
 
         frame.add(avionPane);
+        frame.setTitle("Sincronización Aeropuerto");
+
         String[] columnas = {"ID", "ESTADO", "PRIORIDAD"};
         String[][] filas = new String[model.getBalls().size()][3];
         int i = 0;

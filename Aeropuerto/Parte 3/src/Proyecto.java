@@ -2,7 +2,7 @@ import java.util.concurrent.Semaphore;
 
 
 public class Proyecto {
-    public static int numAviones = 5;
+    public static int numAviones = 10;
 
     public static void main(String[] args) {
         ManejadorArchivosGenerico.lineas = new StringBuffer();
