@@ -7,14 +7,16 @@ public class Proceso implements Runnable, Comparable<Proceso>{
     public int prioridad;
     public List<IRecurso> recursosUsados;
     public Estados estado;
+    public String ruta;
 
     //Inicialización de variables
-    public Proceso(String id, long tiempoEjecucion, int prioridad, List<IRecurso> recursosUsados, Estados estado) {
+    public Proceso(String id, long tiempoEjecucion, int prioridad, List<IRecurso> recursosUsados, Estados estado, String ruta) {
         this.id = id;
         this.tiempoEjecucion = tiempoEjecucion;
         this.prioridad = prioridad;
         this.recursosUsados = recursosUsados;
         this.estado = estado;
+        this.ruta = ruta;
     }
 
     public Estados getEstado(){
@@ -27,20 +29,20 @@ public class Proceso implements Runnable, Comparable<Proceso>{
 
     //Ejecuta el proceso si su tiempo es menor o igual al del TimeOut
     public void run() {
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "Ejecutando " + id + "...");
+        ManejadorDeArchivos.escribirArchivo(ruta, "Ejecutando " + id + "...");
         System.out.println("Ejecutando " + id + "...");
         try {
             Thread.sleep(tiempoEjecucion);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + id + " se termino...");
+        ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + id + " se termino...");
         System.out.println(id + " terminado.");
     }
 
     //Ejecuta un proceso si su tiempo es mayor al del TimeOut y tiene que ejecutarse dos o más veces
     public void runMax() {
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "Ejecutando " + id + "...");
+        ManejadorDeArchivos.escribirArchivo(ruta, "Ejecutando " + id + "...");
         System.out.println("Ejecutando " + id + "...");
         try {
             long currentTime = System.currentTimeMillis();
@@ -48,7 +50,7 @@ public class Proceso implements Runnable, Comparable<Proceso>{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + id + " se termino...");
+        ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + id + " se termino...");
         System.out.println(id + " terminado.");
     }
 

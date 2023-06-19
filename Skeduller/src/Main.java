@@ -17,14 +17,14 @@ public class Main {
         recursosSuspendido.add(r2);
 
         //Se crean los procesos
-        Proceso p1 = new Proceso("1111",5000,2,recursosDisponibles, Proceso.Estados.Listo);
-        Proceso p2 = new Proceso("1112",3000,3,recursosDisponibles, Proceso.Estados.Listo);
-        Proceso p3 = new Proceso("1113",3320,1, recursosSuspendido, Proceso.Estados.Listo);
-        Proceso p4 = new Proceso("1114",3320,1, recursosSuspendido, Proceso.Estados.Listo);
-        Proceso p5 = new Proceso("1115",3320,1, recursosSuspendido, Proceso.Estados.Bloqueado);
+        Proceso p1 = new Proceso("1111",5000,2,recursosDisponibles, Proceso.Estados.Listo,"src/Logs.txt");
+        Proceso p2 = new Proceso("1112",3000,3,recursosDisponibles, Proceso.Estados.Listo,"src/Logs.txt");
+        Proceso p3 = new Proceso("1113",3320,1, recursosSuspendido, Proceso.Estados.Listo,"src/Logs.txt");
+        Proceso p4 = new Proceso("1114",3320,1, recursosSuspendido, Proceso.Estados.Listo,"src/Logs.txt");
+        Proceso p5 = new Proceso("1115",3320,1, recursosSuspendido, Proceso.Estados.Bloqueado,"src/Logs.txt");
 
         //Se inicializan los procesos, el p3 no se debería correr debido a que el recurso que necesita está roto
-        Scheduller scheduller = new Scheduller(recursosDisponibles);
+        Scheduller scheduller = new Scheduller(recursosDisponibles,"src/Logs.txt");
         scheduller.agregarProceso(p1);
         scheduller.agregarProceso(p3);
         scheduller.agregarProceso(p2);

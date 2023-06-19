@@ -10,11 +10,12 @@ public class Scheduller {
     private LinkedList<Proceso> listaProcesosTerminados;
     private Semaphore semaforo;
     private List<IRecurso> recursosDisponibles;
+    public String ruta;
 
 
     //Inicializamos variables y el semáforo en 1 para que sólo un proceso
     //acceda a la vez.
-    public Scheduller(List<IRecurso> recursos) {
+    public Scheduller(List<IRecurso> recursos, String ruta) {
         this.colaLista = new PriorityQueue<>();
         this.listaBloqueado = new LinkedList<>();
         this.listaSuspendidoListo = new LinkedList<>();
@@ -22,6 +23,7 @@ public class Scheduller {
         this.listaProcesosTerminados = new LinkedList<>();
         this.semaforo = new Semaphore(1);
         this.recursosDisponibles = recursos;
+        this.ruta = ruta;
     }
 
 
@@ -31,7 +33,7 @@ public class Scheduller {
         if (proceso.estado == Proceso.Estados.Listo) {
             colaLista.offer(proceso);
         } else if (proceso.estado == Proceso.Estados.Bloqueado) {
-            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " fue bloqueado...");
+            ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + proceso.id + " fue bloqueado...");
             listaBloqueado.offer(proceso);
         }
     }
@@ -90,14 +92,14 @@ public class Scheduller {
             }
         }
         if (ruptura && disponible == false){
-            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " fue suspendido...");
+            ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + proceso.id + " fue suspendido...");
             proceso.estado = Proceso.Estados.SuspendidoBloqueado;
             listaSuspendidoBloqueado.add(proceso);
             procesosParaEliminar.add(proceso);
             return;
         }
         if (disponible && ruptura == false) {
-            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " pasa de bloqueado a listo...");
+            ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + proceso.id + " pasa de bloqueado a listo...");
             proceso.estado = Proceso.Estados.Listo;
             colaLista.add(proceso);
             procesosParaEliminar.add(proceso);
@@ -114,7 +116,7 @@ public class Scheduller {
             }
         }
         if (ruptura == false){
-            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " sale del estado suspendido y vuelve al estado listo...");
+            ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + proceso.id + " sale del estado suspendido y vuelve al estado listo...");
             listaSuspendidoListo.remove(proceso);
             proceso.estado = Proceso.Estados.Listo;
             colaLista.offer(proceso);
@@ -136,7 +138,7 @@ public class Scheduller {
             }
         }
         if (ruptura == true) {
-            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + " fue suspendido...");
+            ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + proceso.id + " fue suspendido...");
             colaLista.poll();
             listaSuspendidoListo.add(proceso);
             proceso.estado = Proceso.Estados.SuspendidoListo;
@@ -146,7 +148,7 @@ public class Scheduller {
                 r.cambiarEstadoUsando();
             }
         }else{
-            ManejadorDeArchivos.escribirArchivo("src/Logs.txt", "El proceso " + proceso.id + "fue bloqueado...");
+            ManejadorDeArchivos.escribirArchivo(ruta, "El proceso " + proceso.id + "fue bloqueado...");
             colaLista.poll();
             listaBloqueado.add(proceso);
             proceso.estado = Proceso.Estados.Bloqueado;
